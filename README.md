@@ -75,7 +75,6 @@ Register the security factory:
 
 ``` yaml
 # app/config/security.yml:
-
 security:
     factories:
         - "%kernel.root_dir%/../vendor/bundles/FM/SingleSignOnBundle/Resources/config/services.xml"
@@ -105,7 +104,6 @@ security:
 
 ``` yaml
 # app/config/security.yml:
-
 security:
     firewalls:
         main:
@@ -119,7 +117,6 @@ The only thing you have to provide is a path and user provider. Everything else 
 
 ``` yaml
 # app/config/security.yml:
-
 security:
     firewalls:
         sso:
@@ -140,7 +137,6 @@ We can use a request matcher service that confines the firewalls to specific dom
 
 ``` yaml
 # app/config/security.yml
-
 security:
     firewalls:
         main:
@@ -153,7 +149,6 @@ Now we can implement them as services:
 
 ``` yaml
 # src/MyAwesomeBundle/Resources/config/services.yml
-
 services:
     my.security.request_matcher.main
         class: %security.matcher.class%
@@ -167,5 +162,6 @@ services:
 
 Issues / TODO's
 ---------------
+
 # Find a way to invalidate SSO sessions when the 'main' session is invalidated.
 # Fix the hard-coded `_otp` parameter in [OneTimePasswordListener](https://github.com/financial-media/SingleSignOnBundle/blob/master/Firewall/OneTimePasswordListener.php#L17)
