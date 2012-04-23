@@ -163,5 +163,5 @@ services:
 Issues / TODO's
 ---------------
 
-# Find a way to invalidate SSO sessions when the 'main' session is invalidated.
-# Fix the hard-coded `_otp` parameter in [OneTimePasswordListener](https://github.com/financial-media/SingleSignOnBundle/blob/master/Firewall/OneTimePasswordListener.php#L17)
+* Find a way to invalidate SSO sessions when the 'main' session is invalidated.
+* Fix the hard-coded `_otp` parameter in [OneTimePasswordListener](https://github.com/financial-media/SingleSignOnBundle/blob/master/Firewall/OneTimePasswordListener.php#L17)
