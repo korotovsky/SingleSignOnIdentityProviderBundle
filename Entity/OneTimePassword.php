@@ -24,14 +24,14 @@ class OneTimePassword
     /**
      * @var string $password
      *
-     * @ORM\Column(name="password", type="string", unique="true")
+     * @ORM\Column(name="password", type="string", unique=true)
      */
     protected $password;
 
     /**
      * @var string $hash
      *
-     * @ORM\Column(name="hash", type="string", unique="true")
+     * @ORM\Column(name="hash", type="string", unique=true)
      */
     protected $hash;
 
