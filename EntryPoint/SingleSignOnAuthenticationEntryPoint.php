@@ -53,9 +53,7 @@ class SingleSignOnAuthenticationEntryPoint implements AuthenticationEntryPointIn
         }
 
         $session = $request->getSession();
-        if ($targetUrl = $session->get('_security.target_path')) {
-            $session->remove('_security.target_path');
-
+        if ($targetUrl = $session->get(sprintf('_security.%s.target_path', $this->options->get('firewall_id')))) {
             return $targetUrl;
         }
 

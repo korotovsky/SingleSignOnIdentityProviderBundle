@@ -47,6 +47,9 @@ class SingleSignOnFactory extends AbstractFactory
     {
         $entryPointId = 'security.authentication.entry_point.fm_sso.' . $id;
 
+        // add firewall id
+        $config['firewall_id'] = $id;
+
         $container
             ->setDefinition($entryPointId, new DefinitionDecorator('fm_sso.security.authentication.entry_point'))
             ->replaceArgument(0, $config)
