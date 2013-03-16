@@ -1,13 +1,13 @@
 {
-    "name": "fm/fm-sso-bundle",
+    "name": "fm/sso-bundle",
     "type": "symfony-bundle",
     "description": "Single-sign-on bundle for Symfony2",
-    "keywords": ["cms"],
-    "homepage": "http://github.com/financial-media/SingleSignOnBundle",
+    "keywords": ["single-sign-on", "sso", "login", "otp"],
+    "license": "MIT",
     "authors": [
         {
             "name": "Peter Kruithof",
-            "email": "peter@alkemade.com"
+            "email": "peter@financial-media.nl"
         }
     ],
     "require": {
@@ -16,8 +16,7 @@
     },
     "autoload": {
         "psr-0": {
-            "FM\\SingleSignOnBundle": ""
+            "FM": "src/"
         }
-    },
-    "target-dir": "FM/SingleSignOnBundle"
+    }
 }
