@@ -15,56 +15,21 @@ and redirects all configured SSO-routes to authenticate via a one-time-password.
 
 Installation
 ------------
-Installation is done the usual Symfony2 way:
-
-### Step 1: Download
-
-Add to deps:
+Install using composer:
 
 ```
-[FMSingleSignOnBundle]
-    git=http://github.com/financial-media/SingleSignOnBundle.git
-    target=bundles/FM/SingleSignOnBundle
+php composer.phar require "fm/sso-bundle" 
 ```
-
-And run `bin/vendors install`
-
-
-### Step 2: Autoload
-
-Add the folowing entry to your autoloader:
-
-``` php
-<?php
-// app/autoload.php
-
-$loader->registerNamespaces(array(
-    // ...
-
-    'FM'          => __DIR__.'/../vendor/bundles',
-));
-```
-
-### Step 3: Register
 
 Enable the bundle in the kernel:
 
 ``` php
-<?php
 // app/AppKernel.php
-
-public function registerBundles()
-{
-    $bundles = array(
-        // ...
-
-        new FM\SingleSignOnBundle\FMSingleSignOnBundle(),
-    );
-}
+$bundles[] = new FM\SingleSignOnBundle\FMSingleSignOnBundle();
 ```
 
-
-### Step 4: Configure
+Configuration
+-------------
 
 Enable sso-routes:
 
@@ -79,15 +44,6 @@ otp:
     pattern: /otp/
 ```
 
-Register the security factory:
-
-``` yaml
-# app/config/security.yml:
-security:
-    factories:
-        - "%kernel.root_dir%/../vendor/bundles/FM/SingleSignOnBundle/Resources/config/services.xml"
-```
-
 The bundle relies on an existing firewall to provide the actual authentication.
 To do this, you have to configure the single-sign-on login path to be behind that firewall,
 and make sure you need to be authenticated to access that route.
@@ -97,7 +53,6 @@ and make sure you need to be authenticated to access that route.
 fm_single_sign_on:
     host: mydomain.com
     login_path: /sso/
-
 ```
 
 ``` yaml
@@ -115,7 +70,7 @@ security:
 security:
     firewalls:
         main:
-            pattern:   ^/
+            pattern: ^/
 ```
 
 This makes sure the user has to authenticate first (using a login form).
@@ -128,10 +83,10 @@ The only thing you have to provide is a path and user provider. Everything else 
 security:
     firewalls:
         sso:
-            pattern:                 ^/
+            pattern: ^/
             fm_sso:
-                provider:            main
-                check_path:          /otp/ # path where otp will be authenticated
+                provider: main
+                check_path: /otp/ # path where otp will be authenticated
 ```
 
 That's it, you're done!
@@ -166,10 +121,3 @@ services:
         class: %security.matcher.class%
         arguments: ["/", "domain-b.com"]
 ```
-
-
-Issues / TODO's
----------------
-
-* Find a way to invalidate SSO sessions when the 'main' session is invalidated.
-* Fix the hard-coded `_otp` parameter in [OneTimePasswordListener](https://github.com/financial-media/SingleSignOnBundle/blob/master/Firewall/OneTimePasswordListener.php#L17)
