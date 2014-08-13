@@ -1,23 +1,27 @@
 {
-    "name": "fm/sso-bundle",
+    "name": "korotovsky/sso-idp-bundle",
     "type": "symfony-bundle",
-    "description": "Single-sign-on bundle for Symfony2",
+    "description": "Single-sign-on bundle for Symfony2. Identity Provider part.",
     "keywords": ["single-sign-on", "sso", "login", "otp"],
     "license": "MIT",
     "authors": [
         {
             "name": "Peter Kruithof",
             "email": "peter@financial-media.nl"
+        },
+        {
+            "name": "Dmitry Korotovsky",
+            "email": "dmitry@korotovsky.io"
         }
     ],
     "require": {
         "php": ">=5.3.3",
-        "symfony/symfony": ">=2.1",
+        "symfony/symfony": ">=2.2",
         "ext-openssl": "*"
     },
     "autoload": {
-        "psr-0": {
-            "FM": "src/"
+        "psr-4": {
+            "Krtv\\Bundle\\SingleSignOnIdentityProviderBundle\\": "src/Krtv/Bundle/SingleSignOnIdentityProviderBundle"
         }
     }
 }

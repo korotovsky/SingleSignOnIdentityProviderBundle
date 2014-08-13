@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <parameters>
+        <parameter key="krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm.class">Krtv\SingleSignOn\Manager\ORM\OneTimePasswordManager</parameter>
+        <parameter key="krtv_single_sign_on_identity_provider.encoder.otp.class">Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder</parameter>
+
+        <parameter key="krtv_single_sign_on_identity_provider.routing.loader.class">Krtv\Bundle\SingleSignOnIdentityProviderBundle\Routing\SsoRoutesLoader</parameter>
+        <parameter key="krtv_single_sign_on_identity_provider.entity.class">Krtv\Bundle\SingleSignOnIdentityProviderBundle\Entity\OneTimePassword</parameter>
+    </parameters>
+
+    <services>
+        <service id="krtv_single_sign_on_identity_provider.routing.loader" class="%krtv_single_sign_on_identity_provider.routing.loader.class%">
+            <tag name="routing.loader"/>
+            <argument/> <!-- sso host -->
+            <argument/> <!-- sso path -->
+        </service>
+
+        <service id="krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm" class="%krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm.class%">
+            <argument type="service" id="doctrine.orm.entity_manager"/>
+            <argument type="string">%krtv_single_sign_on_identity_provider.entity.class%</argument>
+        </service>
+
+        <service id="krtv_single_sign_on_identity_provider.security.authentication.encoder" class="%krtv_single_sign_on_identity_provider.encoder.otp.class%">
+            <argument/> <!-- secret -->
+        </service>
+
+        <service id="krtv_single_sign_on_identity_provider.uri_signer" class="%uri_signer.class%">
+            <argument/> <!-- secret -->
+        </service>
+    </services>
+</container>

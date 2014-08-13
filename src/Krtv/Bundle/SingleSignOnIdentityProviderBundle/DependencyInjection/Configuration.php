@@ -1,10 +1,14 @@
 <?php
 
-namespace FM\SingleSignOnBundle\DependencyInjection;
+namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
+/**
+ * Class Configuration
+ * @package Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection
+ */
 class Configuration implements ConfigurationInterface
 {
     /**
@@ -16,7 +20,7 @@ class Configuration implements ConfigurationInterface
     {
         $builder = new TreeBuilder();
 
-        $builder->root('fm_single_sign_on')
+        $builder->root('krtv_single_sign_on_identity_provider')
             ->children()
                 ->scalarNode('host')
                     ->isRequired()
@@ -24,8 +28,12 @@ class Configuration implements ConfigurationInterface
                         ->ifTrue(function($v) {
                             return preg_match('/^http(s?):\/\//', $v);
                         })
-                        ->thenInvalid('SSO host must only contain the host, and not the url scheme, eg: domain.com')
+                        ->thenInvalid('SSO host must only contain the host, and not the url scheme, eg: idp.domain.com')
                     ->end()
+                ->end()
+
+                ->scalarNode('host_scheme')
+                    ->defaultValue('http')
                 ->end()
 
                 ->scalarNode('login_path')
@@ -34,6 +42,10 @@ class Configuration implements ConfigurationInterface
 
                 ->scalarNode('otp_parameter')
                     ->defaultValue('_otp')
+                ->end()
+
+                ->scalarNode('secret_parameter')
+                    ->defaultValue('secret')
                 ->end()
             ->end()
         ;
