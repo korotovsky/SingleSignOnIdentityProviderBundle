@@ -35,6 +35,9 @@ class KrtvSingleSignOnIdentityProviderExtension extends Extension
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.xml');
 
+        // Set alias for ServiceManager
+        $container->setAlias('sso_identity_provider.service_manager', new Alias('krtv_single_sign_on_identity_provider.manager.service_manager'));
+
         // Set alias for OTP
         $container->setAlias('sso_identity_provider.otp_manager', new Alias('krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm'));
 

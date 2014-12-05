@@ -24,13 +24,20 @@ class SsoRoutesLoader implements LoaderInterface
     private $ssoLoginPath;
 
     /**
+     * @var string
+     */
+    private $ssoLogoutPath;
+
+    /**
      * @param $ssoHost
      * @param $ssoLoginPath
+     * @param $ssoLogoutPath
      */
-    public function __construct($ssoHost, $ssoLoginPath)
+    public function __construct($ssoHost, $ssoLoginPath, $ssoLogoutPath)
     {
         $this->ssoHost = $ssoHost;
-        $this->ssoLoginPath   = $ssoLoginPath;
+        $this->ssoLoginPath = $ssoLoginPath;
+        $this->ssoLogoutPath = $ssoLogoutPath;
     }
 
     /**
@@ -44,6 +51,9 @@ class SsoRoutesLoader implements LoaderInterface
 
         $route = new Route($this->ssoLoginPath, array('_controller' => 'KrtvSingleSignOnIdentityProviderBundle:SingleSignOn:ssoLogin'));
         $routes->add('sso_login_path', $route);
+
+        $route = new Route($this->ssoLogoutPath, array('_controller' => 'KrtvSingleSignOnIdentityProviderBundle:SingleSignOn:ssoLogout'));
+        $routes->add('sso_logout_path', $route);
 
         return $routes;
     }

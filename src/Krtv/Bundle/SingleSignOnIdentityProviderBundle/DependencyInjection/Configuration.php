@@ -40,6 +40,18 @@ class Configuration implements ConfigurationInterface
                     ->isRequired()
                 ->end()
 
+                ->scalarNode('logout_path')
+                    ->isRequired()
+                ->end()
+
+                ->arrayNode('services')
+                    ->info('Array of enabled ServiceProviders (SPs)')
+                    ->isRequired()
+                    ->prototype('scalar')
+
+                    ->end()
+                ->end()
+
                 ->scalarNode('otp_parameter')
                     ->defaultValue('_otp')
                 ->end()
