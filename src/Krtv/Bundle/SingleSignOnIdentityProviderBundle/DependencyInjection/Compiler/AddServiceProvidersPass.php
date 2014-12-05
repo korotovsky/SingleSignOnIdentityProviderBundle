@@ -19,8 +19,14 @@ class AddServiceProvidersPass implements CompilerPassInterface
     {
         $services = array();
 
+        $activeServices = $container->getParameter('krtv_single_sign_on_identity_provider.services');
+
         foreach ($container->findTaggedServiceIds('sso.service_provider') as $id => $attributes) {
-            $services[$attributes[0]['service']] = $container->getDefinition($id);
+            $name = $attributes[0]['service'];
+
+            if (in_array($name, $activeServices)) {
+                $services[$name] = $container->getDefinition($id);
+            }
         }
 
         $container->getDefinition('krtv_single_sign_on_identity_provider.manager.service_manager')
