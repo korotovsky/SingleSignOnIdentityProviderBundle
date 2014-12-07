@@ -16,7 +16,7 @@ class KrtvSingleSignOnIdentityProviderBundleTest extends \PHPUnit_Framework_Test
     {
         $container = $this->getMock('Symfony\Component\DependencyInjection\ContainerBuilder');
 
-        $container->expects($this->exactly(4))
+        $container->expects($this->exactly(3))
             ->method('addCompilerPass')
             ->with($this->isInstanceOf('Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface'));
 

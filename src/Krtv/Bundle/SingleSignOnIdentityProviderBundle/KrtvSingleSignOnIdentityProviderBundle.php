@@ -4,10 +4,9 @@ namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\AddEncoderSecretPass;
-use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\AddUriSignerSecretPass;
-use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\AddRoutingConfigPass;
-use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\AddServiceProvidersPass;
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\ResolveSecretPass;
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\RoutingConfigPass;
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\ServiceProvidersPass;
 
 /**
  * Class KrtvSingleSignOnIdentityProviderBundle
@@ -16,15 +15,14 @@ use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\
 class KrtvSingleSignOnIdentityProviderBundle extends Bundle
 {
     /**
-     * @param ContainerBuilder $container
+     * {@inheritDoc}
      */
     public function build(ContainerBuilder $container)
     {
         parent::build($container);
 
-        $container->addCompilerPass(new AddEncoderSecretPass());
-        $container->addCompilerPass(new AddUriSignerSecretPass());
-        $container->addCompilerPass(new AddRoutingConfigPass());
-        $container->addCompilerPass(new AddServiceProvidersPass());
+        $container->addCompilerPass(new RoutingConfigPass());
+        $container->addCompilerPass(new ServiceProvidersPass());
+        $container->addCompilerPass(new ResolveSecretPass());
     }
 }

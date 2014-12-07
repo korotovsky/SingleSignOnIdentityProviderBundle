@@ -87,3 +87,4 @@ class TargetPathSubscriber implements EventSubscriberInterface
         }
     }
 }
+

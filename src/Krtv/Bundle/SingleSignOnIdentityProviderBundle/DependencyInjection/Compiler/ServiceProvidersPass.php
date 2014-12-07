@@ -6,13 +6,13 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 
 /**
- * Class AddServiceProvidersPass
+ * Class ServiceProvidersPass
  * @package Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler
  */
-class AddServiceProvidersPass implements CompilerPassInterface
+class ServiceProvidersPass implements CompilerPassInterface
 {
     /**
-     * @param ContainerBuilder $container
+     * {@inheritDoc}
      */
     public function process(ContainerBuilder $container)
     {

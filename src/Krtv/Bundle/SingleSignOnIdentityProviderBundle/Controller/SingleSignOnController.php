@@ -31,12 +31,9 @@ class SingleSignOnController extends Controller
             throw new BadRequestHttpException('Malformed uri');
         }
 
-        $httpUtils = $this->get('security.http_utils');
-        $securityContext = $this->get('security.context');
-
-        if (false === $securityContext->isGranted('ROLE_USER') && $request->get('_failure_path')) {
-            return $httpUtils->createRedirectResponse($request, $request->get('_failure_path'));
-        } elseif (false === $securityContext->isGranted('ROLE_USER')) {
+        if (false === $this->get('security.context')->isGranted('ROLE_USER') && $request->get('_failure_path')) {
+            return $this->get('security.http_utils')->createRedirectResponse($request, $request->get('_failure_path'));
+        } elseif (false === $this->get('security.context')->isGranted('ROLE_USER')) {
             throw new AccessDeniedException();
         }
 
@@ -46,15 +43,12 @@ class SingleSignOnController extends Controller
 
         $user = $this->get('security.context')->getToken()->getUser();
 
-        $expires = microtime(true) + 300; // expires in 5 minutes
-        $value = $otpEncoder->generateOneTimePasswordValue($user->getUsername(), $expires);
+        $value = $otpEncoder->generateOneTimePasswordValue($user->getUsername(), microtime(true) + 300);
         $otp = $otpOrmManager->create($value);
 
-        $redirectUri = $request->get('_target_path');
-        $redirectUri .= sprintf('&%s=%s', $otpParameter, rawurlencode($otp));
-        $redirectUri = $uriSigner->sign($redirectUri);
+        $redirectUri = sprintf('%s&%s=%s', $request->get('_target_path'), $otpParameter, rawurlencode($otp));
 
-        return $httpUtils->createRedirectResponse($request, $redirectUri);
+        return $this->get('security.http_utils')->createRedirectResponse($request, $uriSigner->sign($redirectUri));
     }
 
     /**

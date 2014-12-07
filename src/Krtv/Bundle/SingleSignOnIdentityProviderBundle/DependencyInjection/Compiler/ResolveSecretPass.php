@@ -6,21 +6,20 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 
 /**
- * Class AddUriSignerSecretPass
+ * Class ResolveSecretPass
  * @package Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler
  */
-class AddUriSignerSecretPass implements CompilerPassInterface
+class ResolveSecretPass implements CompilerPassInterface
 {
     /**
-     * @param ContainerBuilder $container
+     * {@inheritDoc}
      */
     public function process(ContainerBuilder $container)
     {
-        if (!$container->hasDefinition('krtv_single_sign_on_identity_provider.uri_signer')) {
-            return;
-        }
-
         $parameter = $container->getParameter('krtv_single_sign_on_identity_provider.secret_parameter');
+
+        $container->getDefinition('krtv_single_sign_on_identity_provider.security.authentication.encoder')
+            ->replaceArgument(0, $container->getParameter($parameter));
 
         $container->getDefinition('krtv_single_sign_on_identity_provider.uri_signer')
             ->replaceArgument(0, $container->getParameter($parameter));
