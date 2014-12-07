@@ -20,6 +20,9 @@
         "korotovsky/sso-library": "0.1.*",
         "ext-openssl": "*"
     },
+    "require-dev": {
+        "phpunit/phpunit": ">=4.4"
+    },
     "autoload": {
         "psr-4": {
             "Krtv\\Bundle\\SingleSignOnIdentityProviderBundle\\": "src/Krtv/Bundle/SingleSignOnIdentityProviderBundle"

@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Class SingleSignOnController
@@ -31,12 +32,12 @@ class SingleSignOnController extends Controller
         }
 
         $httpUtils = $this->get('security.http_utils');
-
         $securityContext = $this->get('security.context');
+
         if (false === $securityContext->isGranted('ROLE_USER') && $request->get('_failure_path')) {
             return $httpUtils->createRedirectResponse($request, $request->get('_failure_path'));
         } elseif (false === $securityContext->isGranted('ROLE_USER')) {
-            return $httpUtils->createRedirectResponse($request, $this->generateUrl('_security_login'));
+            throw new AccessDeniedException();
         }
 
         $otpParameter = $this->container->getParameter('krtv_single_sign_on_identity_provider.otp_parameter');

@@ -29,7 +29,7 @@ class ServiceManager
     private $services;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $requestService;
 
@@ -104,10 +104,8 @@ class ServiceManager
     {
         $serviceManager = $this->getServiceManager($service);
 
-        $targetUrl = $serviceManager->getServiceIndexUrl();
-
         $this->session->set($this->getSessionKey(), $service);
-        $this->session->set($this->getSecurityKey(), $targetUrl);
+        $this->session->set($this->getSecurityKey(), $serviceManager->getServiceIndexUrl());
 
         return true;
     }
