@@ -75,7 +75,7 @@ class LogoutManager
     }
 
     /**
-     * @param $service
+     * @param string $service
      */
     private function addProcessedService($service)
     {

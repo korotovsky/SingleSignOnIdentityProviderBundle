@@ -2,7 +2,6 @@
 
 namespace Krtv\Bundle\SingleSignOnIdentityProviderBunde\Tests\Routing;
 
-use Krtv\Bundle\SingleSignOnIdentityProviderBundle\KrtvSingleSignOnIdentityProviderBundle;
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Routing\SsoRoutesLoader;
 
 /**

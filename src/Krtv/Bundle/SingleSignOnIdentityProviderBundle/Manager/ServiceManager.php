@@ -50,7 +50,7 @@ class ServiceManager
     }
 
     /**
-     * @return array
+     * @return integer[]
      */
     public function getServices()
     {

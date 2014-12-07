@@ -29,9 +29,9 @@ class SsoRoutesLoader implements LoaderInterface
     private $ssoLogoutPath;
 
     /**
-     * @param $ssoHost
-     * @param $ssoLoginPath
-     * @param $ssoLogoutPath
+     * @param string $ssoHost
+     * @param string $ssoLoginPath
+     * @param string $ssoLogoutPath
      */
     public function __construct($ssoHost, $ssoLoginPath, $ssoLogoutPath)
     {
@@ -41,7 +41,7 @@ class SsoRoutesLoader implements LoaderInterface
     }
 
     /**
-     * @param mixed $resource
+     * @param string $resource
      * @param null $type
      * @return RouteCollection
      */
@@ -59,8 +59,8 @@ class SsoRoutesLoader implements LoaderInterface
     }
 
     /**
-     * @param mixed $resource
-     * @param null $type
+     * @param string $resource
+     * @param string $type
      * @return bool
      */
     public function supports($resource, $type = null)
