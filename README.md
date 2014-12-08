@@ -62,7 +62,20 @@ krtv_single_sign_on_identity_provider:
 
     otp_parameter:    _otp
     secret_parameter: secret
+
+services:
+    acme_bundle.sso.consumer1:
+        class: Krtv\Bundle\SingleSignOnIdentityProviderBundle\Tests\Application\ServiceProviders\ServiceProvider1
+        tags:
+            - { name: sso.service_provider, service: consumer1 }
+
+    acme_bundle.sso.consumer2:
+        class: Krtv\Bundle\SingleSignOnIdentityProviderBundle\Tests\Application\ServiceProviders\ServiceProvider2
+        tags:
+            - { name: sso.service_provider, service: consumer2 }
 ```
+
+Feel free to modify `ServiceProviders\*` classes. They contain your own specific logic for each connected service.
 
 ``` yaml
 # app/config/security.yml
