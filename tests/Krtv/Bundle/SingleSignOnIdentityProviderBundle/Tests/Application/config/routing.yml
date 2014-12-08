@@ -1,3 +1,6 @@
 sso:
     resource: .
     type:     sso
+
+_security_logout:
+    path:     /logout

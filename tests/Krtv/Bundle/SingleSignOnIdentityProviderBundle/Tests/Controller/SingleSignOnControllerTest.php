@@ -237,4 +237,88 @@ class SingleSignOnControllerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(302, $this->response->getStatusCode());
         $this->assertRegExp('/_otp=([a-zA-Z0-9\%]+)&_hash=([a-zA-Z0-9\%]+)$/', $this->response->headers->get('location'));
     }
+
+    /**
+     * Scenario:
+     *      1) http://idp.example.com/sso/logout
+     *      1) http://consumer1.com/logout
+     *      2) http://idp.example.com/sso/logout?service=consumer1
+     *      3) http://consumer2.com/logout
+     *      4) http://idp.example.com/sso/logout?service=consumer2
+     *      5) http://idp.example.com/logout
+     *      6) http://idp.example.com/
+     */
+    public function testSsoLogoutStartedFromIdentityProvider()
+    {
+        $this->authenticate();
+
+        $this->response = $this->request('GET', '/sso/logout');
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertEquals('http://consumer1.com/logout', $this->response->headers->get('location'));
+
+        $this->response = $this->request('GET', '/sso/logout?service=consumer1', array('service' => 'consumer1'));
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertEquals('http://consumer2.com/logout', $this->response->headers->get('location'));
+
+        $this->response = $this->request('GET', '/sso/logout?service=consumer2', array('service' => 'consumer2'));
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertEquals('http://idp.example.com/logout', $this->response->headers->get('location'));
+
+        self::$application->getKernel()->getContainer()->get('session')->clear();
+    }
+
+    /**
+     * Scenario:
+     *      1) http://consumer2.com/logout
+     *      2) http://idp.example.com/sso/logout?service=consumer2
+     *      3) http://consumer1.com/logout
+     *      4) http://idp.example.com/sso/logout?service=consumer1
+     *      5) http://idp.example.com/logout
+     *      6) http://idp.example.com/
+     */
+    public function testSsoLogoutStartedFromServiceProvider2()
+    {
+        $this->authenticate();
+
+        $this->response = $this->request('GET', '/sso/logout?service=consumer2', array('service' => 'consumer2'));
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertEquals('http://consumer1.com/logout', $this->response->headers->get('location'));
+
+        $this->response = $this->request('GET', '/sso/logout?service=consumer1', array('service' => 'consumer1'));
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertEquals('http://idp.example.com/logout', $this->response->headers->get('location'));
+
+        self::$application->getKernel()->getContainer()->get('session')->clear();
+    }
+
+    /**
+     * Scenario:
+     *      1) http://consumer1.com/logout
+     *      2) http://idp.example.com/sso/logout?service=consumer1
+     *      3) http://consumer2.com/logout
+     *      4) http://idp.example.com/sso/logout?service=consumer2
+     *      5) http://idp.example.com/logout
+     *      6) http://idp.example.com/
+     */
+    public function testSsoLogoutStartedFromServiceProvider1()
+    {
+        $this->authenticate();
+
+        $this->response = $this->request('GET', '/sso/logout?service=consumer1', array('service' => 'consumer1'));
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertEquals('http://consumer2.com/logout', $this->response->headers->get('location'));
+
+        $this->response = $this->request('GET', '/sso/logout?service=consumer2', array('service' => 'consumer2'));
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertEquals('http://idp.example.com/logout', $this->response->headers->get('location'));
+
+        self::$application->getKernel()->getContainer()->get('session')->clear();
+    }
 }
