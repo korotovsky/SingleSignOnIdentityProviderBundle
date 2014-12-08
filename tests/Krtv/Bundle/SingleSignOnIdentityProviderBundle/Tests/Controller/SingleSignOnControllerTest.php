@@ -6,6 +6,7 @@ use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Tests\Application\AppKernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
@@ -18,6 +19,16 @@ class SingleSignOnControllerTest extends \PHPUnit_Framework_TestCase
      * @var Application
      */
     private static $application;
+
+    /**
+     * @var Request
+     */
+    private $request;
+
+    /**
+     * @var Response
+     */
+    private $response;
 
     /**
      * @param string $command
@@ -64,23 +75,68 @@ class SingleSignOnControllerTest extends \PHPUnit_Framework_TestCase
         static::runConsole('doctrine:database:drop', array('-n' => true, '--force' => true));
         static::runConsole('doctrine:database:create', array('-n' => true));
         static::runConsole('doctrine:schema:create', array('-n' => true));
+
+        $this->request = new Request();
+        $this->request->headers->set('HTTP_HOST', 'idp.example.com');
+        $this->request->server->set('SERVER_NAME', 'idp.example.com');
+        $this->request->server->set('SERVER_PORT', 80);
     }
 
     /**
+     *
+     */
+    protected function tearDown()
+    {
+        parent::tearDown();
+
+        $this->request = null;
+        $this->response = null;
+    }
+
+    /**
+     *
+     */
+    protected function authenticate()
+    {
+        $this->request->headers->set('Authorization', sprintf('Basic %s', base64_encode('qwerty:ytrewq')));
+        $this->request->headers->set('PHP_AUTH_USER', 'qwerty');
+        $this->request->headers->set('PHP_AUTH_PW', 'ytrewq');
+    }
+
+    /**
+     * @param string $requestUri
+     * @return string
+     */
+    protected function getSignedUriHash($requestUri)
+    {
+        $signer = self::$application->getKernel()->getContainer()->get('krtv_single_sign_on_identity_provider.uri_signer');
+        $signedUri = $signer->sign(sprintf('%s://%s%s', $this->request->getScheme(), $this->request->getHost(), $requestUri));
+
+        parse_str($signedUri, $query);
+
+        return $query['_hash'];
+    }
+
+    /**
+     * @param string $method
      * @param string $url
      * @param array $params
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    protected function request($url, array $params = array())
+    protected function request($method, $url, array $params = array())
     {
-        $request = new Request();
-        $request->headers->set('HTTP_HOST', 'idp.example.com');
-        $request->headers->set('Authorization', sprintf('Basic %s', base64_encode('qwerty:ytrewq')));
-        $request->server->set('SERVER_NAME', 'idp.example.com');
-        $request->server->set('SERVER_PORT', 80);
-        $request->server->set('REQUEST_URI', $url);
+        $this->request->server->set('REQUEST_URI', $url);
+        $this->request->setMethod($method);
 
-        return self::$application->getKernel()->handle($request);
+        switch ($method) {
+            case 'GET':
+                $this->request->query->add($params); break;
+            case 'POST':
+                $this->request->request->add($params); break;
+            default;
+        }
+
+        return self::$application->getKernel()->handle($this->request);
     }
 
     /**
@@ -88,13 +144,97 @@ class SingleSignOnControllerTest extends \PHPUnit_Framework_TestCase
      */
     public function testSsoLoginWithoutTargetPathException()
     {
-        $response = $this->request('/sso/login/');
+        $this->response = $this->request('GET', '/sso/login/');
 
-        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertEquals(400, $this->response->getStatusCode());
     }
 
+    /**
+     *
+     */
     public function testSsoLoginMalformedUriException()
     {
+        $targetPath = 'http://consumer1.com/otp/validate/?_target_path=http://consumer1.com/';
+        $requestUri = sprintf('/sso/login/?_target_path=%s', $targetPath);
 
+        $hash = $this->getSignedUriHash($requestUri);
+
+        $requestUri = sprintf('%s&_hash=%s', $requestUri, urlencode($hash) . 'BROKEN_HASH');
+
+        $this->request->query->set('_target_path', $targetPath);
+        $this->request->query->set('_hash', $hash . 'BROKEN_HASH');
+
+        $this->response = $this->request('GET', $requestUri);
+
+        $this->assertEquals(400, $this->response->getStatusCode());
+    }
+
+    /**
+     *
+     */
+    public function testSsoLoginUnauthorizedRedirectToFailurePath()
+    {
+        $targetPath = 'http://consumer1.com/otp/validate/?_target_path=http://consumer1.com/';
+        $failurePath = 'http://consumer1.com/?login_required=1';
+
+        $requestUri = sprintf('/sso/login/?_target_path=%s&_failure_path=%s', $targetPath, $failurePath);
+
+        $hash = $this->getSignedUriHash($requestUri);
+
+        $requestUri = sprintf('%s&_hash=%s', $requestUri, urlencode($hash));
+
+        $this->request->query->set('_target_path', $targetPath);
+        $this->request->query->set('_failure_path', $failurePath);
+        $this->request->query->set('_hash', $hash);
+
+        $this->response = $this->request('GET', $requestUri);
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertEquals('http://consumer1.com/?login_required=1', $this->response->headers->get('location'));
+    }
+
+    /**
+     *
+     */
+    public function testSsoLoginUnauthorizedAccessDeniedExceptionCatchedByExceptionListener()
+    {
+        $targetPath = 'http://consumer1.com/otp/validate/?_target_path=http://consumer1.com/';
+
+        $requestUri = sprintf('/sso/login/?_target_path=%s', $targetPath);
+
+        $hash = $this->getSignedUriHash($requestUri);
+
+        $requestUri = sprintf('%s&_hash=%s', $requestUri, urlencode($hash));
+
+        $this->request->query->set('_target_path', $targetPath);
+        $this->request->query->set('_hash', $hash);
+
+        $this->response = $this->request('GET', $requestUri);
+
+        $this->assertEquals(401, $this->response->getStatusCode());
+        $this->assertEquals('Basic realm="Secured Demo Area"', $this->response->headers->get('www-authenticate'));
+    }
+
+    /**
+     *
+     */
+    public function testSsoLoginWithRedirectToOtpValidation()
+    {
+        $targetPath = 'http://consumer1.com/otp/validate/?_target_path=http://consumer1.com/';
+
+        $requestUri = sprintf('/sso/login/?_target_path=%s', $targetPath);
+
+        $hash = $this->getSignedUriHash($requestUri);
+
+        $requestUri = sprintf('%s&_hash=%s', $requestUri, urlencode($hash));
+
+        $this->request->query->set('_target_path', $targetPath);
+        $this->request->query->set('_hash', $hash);
+        $this->authenticate();
+
+        $this->response = $this->request('GET', $requestUri);
+
+        $this->assertEquals(302, $this->response->getStatusCode());
+        $this->assertRegExp('/_otp=([a-zA-Z0-9\%]+)&_hash=([a-zA-Z0-9\%]+)$/', $this->response->headers->get('location'));
     }
 }
