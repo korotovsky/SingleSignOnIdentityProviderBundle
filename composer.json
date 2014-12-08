@@ -19,7 +19,8 @@
 
         "doctrine/orm": ">=2.3",
         "symfony/symfony": ">=2.2",
-        "korotovsky/sso-library": "0.1.*",
+
+        "korotovsky/sso-library": "0.2.*",
 
         "ext-openssl": "*"
     },
