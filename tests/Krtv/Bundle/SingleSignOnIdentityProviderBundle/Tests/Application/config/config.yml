@@ -1,4 +1,12 @@
 framework:
+    test: ~
+
+    session:
+        storage_id: session.storage.mock_file
+
+    profiler:
+        collect: false
+
     secret: %secret%
     router:
         resource: %kernel.root_dir%/config/routing.yml
@@ -63,6 +71,12 @@ krtv_single_sign_on_identity_provider:
     secret_parameter: secret
 
 services:
+
+    # Hack for \Symfony\Component\DependencyInjection\Compiler\RemoveUnusedDefinitionsPass
+    application.just_keep_security.http_utils.in_contaner:
+        class: stdClass
+        arguments:
+            - @security.http_utils
 
 parameters:
     secret:       very_secret

@@ -39,7 +39,6 @@ class KrtvSingleSignOnIdentityProviderExtensionTest extends \PHPUnit_Framework_T
         $services = array(
             'krtv_single_sign_on_identity_provider.routing.loader',
             'krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm',
-            'krtv_single_sign_on_identity_provider.event_listner.service_subscriber',
             'krtv_single_sign_on_identity_provider.security.authentication.encoder',
             'krtv_single_sign_on_identity_provider.uri_signer',
         );
@@ -68,7 +67,6 @@ class KrtvSingleSignOnIdentityProviderExtensionTest extends \PHPUnit_Framework_T
             'krtv_single_sign_on_identity_provider.login_path' => '/sso/login/',
             'krtv_single_sign_on_identity_provider.otp_parameter' => '_otp',
             'krtv_single_sign_on_identity_provider.secret_parameter' => 'secret',
-            'krtv_single_sign_on_identity_provider.security.firewall_id' => 'main',
             'krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm.class' => 'Krtv\SingleSignOn\Manager\ORM\OneTimePasswordManager',
             'krtv_single_sign_on_identity_provider.encoder.otp.class' => 'Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder',
             'krtv_single_sign_on_identity_provider.routing.loader.class' => 'Krtv\Bundle\SingleSignOnIdentityProviderBundle\Routing\SsoRoutesLoader',

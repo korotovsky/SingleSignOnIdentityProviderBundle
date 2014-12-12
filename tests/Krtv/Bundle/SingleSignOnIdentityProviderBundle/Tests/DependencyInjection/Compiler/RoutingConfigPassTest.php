@@ -33,7 +33,7 @@ class RoutingConfigPassTest extends \PHPUnit_Framework_TestCase
 
         $loader = $this->getMockBuilder('Symfony\Component\DependencyInjection\Definition')
             ->getMock();
-        $loader->expects($this->exactly(3))
+        $loader->expects($this->exactly(2))
             ->method('replaceArgument')
             ->withConsecutive(
                 array(0, 'idp.example.com'),

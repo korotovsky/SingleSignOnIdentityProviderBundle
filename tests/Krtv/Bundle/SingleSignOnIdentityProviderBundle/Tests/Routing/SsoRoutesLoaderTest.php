@@ -17,7 +17,7 @@ class KrtvSingleSignOnIdentityProviderBundleTest extends \PHPUnit_Framework_Test
     {
         $routes = $this->getSsoRoutesLoader()->load('sso');
 
-        $this->assertCount(2, $routes);
+        $this->assertCount(1, $routes);
     }
 
     /**
@@ -46,6 +46,6 @@ class KrtvSingleSignOnIdentityProviderBundleTest extends \PHPUnit_Framework_Test
      */
     private function getSsoRoutesLoader()
     {
-        return new SsoRoutesLoader('idp.example.com', '/sso/login', '/sso/logout');
+        return new SsoRoutesLoader('idp.example.com', '/sso/login');
     }
 }
