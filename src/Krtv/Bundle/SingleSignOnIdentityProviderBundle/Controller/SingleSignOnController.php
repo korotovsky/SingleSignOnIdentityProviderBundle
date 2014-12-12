@@ -20,7 +20,9 @@ class SingleSignOnController extends Controller
      */
     public function ssoLoginAction(Request $request)
     {
-        if ($request->get('_target_path') == '') {
+        $targetPathParameter = $this->container->getParameter('krtv_single_sign_on_identity_provider.target_path_parameter');
+
+        if ($request->get($targetPathParameter) == '') {
             throw new BadRequestHttpException('Target path not specified');
         }
 
@@ -40,7 +42,7 @@ class SingleSignOnController extends Controller
         $value = $otpEncoder->generateOneTimePasswordValue($user->getUsername(), $expires);
         $otp = $otpOrmManager->create($value);
 
-        $redirectUri = $request->get('_target_path');
+        $redirectUri = $request->get($targetPathParameter);
         $redirectUri .= sprintf('&%s=%s', $otpParameter, rawurlencode($otp));
         $redirectUri = $uriSigner->sign($redirectUri);
 
