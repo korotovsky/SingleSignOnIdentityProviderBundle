@@ -4,7 +4,6 @@ namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\ResolveSecretPass;
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Compiler\RoutingConfigPass;
 

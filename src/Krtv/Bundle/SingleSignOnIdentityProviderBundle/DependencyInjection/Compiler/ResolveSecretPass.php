@@ -4,7 +4,6 @@ namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection\Com
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\DefinitionDecorator;
 
 /**
  * Class ResolveSecretPass
