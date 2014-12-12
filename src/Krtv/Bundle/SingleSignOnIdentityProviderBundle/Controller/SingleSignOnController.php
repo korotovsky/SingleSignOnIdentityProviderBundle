@@ -48,10 +48,25 @@ class SingleSignOnController extends Controller
         $value = $otpEncoder->generateOneTimePasswordValue($user->getUsername(), microtime(true) + 300);
         $otp = $otpOrmManager->create($value);
 
-        $redirectUri = $request->get($targetPathParameter);
-        $redirectUri .= sprintf('&%s=%s', $otpParameter, rawurlencode($otp));
-        $redirectUri = $uriSigner->sign($redirectUri);
+        $redirectUri = sprintf('%s&%s=%s', $request->get($targetPathParameter), $otpParameter, rawurlencode($otp));
 
         return $this->get('security.http_utils')->createRedirectResponse($request, $uriSigner->sign($redirectUri));
+    }
+
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     * @throws \Exception
+     */
+    public function ssoLogoutAction(Request $request)
+    {
+        $serviceManager = $this->get('krtv_single_sign_on_identity_provider.manager.service_manager');
+        $logoutManager = $this->get('krtv_single_sign_on_identity_provider.manager.logout_manager');
+
+        if (!$request->get(ServiceManager::SERVICE_PARAM)) {
+            $serviceManager->setDefaults();
+        }
+ 
+        return $this->get('security.http_utils')->createRedirectResponse($request, $logoutManager->getNextLogoutUrl());
     }
 }

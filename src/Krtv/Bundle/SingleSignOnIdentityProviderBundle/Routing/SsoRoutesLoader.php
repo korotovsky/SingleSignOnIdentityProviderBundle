@@ -42,7 +42,7 @@ class SsoRoutesLoader implements LoaderInterface
 
     /**
      * @param string $resource
-     * @param null $type
+     * @param string $type
      * @return RouteCollection
      */
     public function load($resource, $type = null)
