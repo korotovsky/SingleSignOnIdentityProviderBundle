@@ -59,6 +59,10 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('secret_parameter')
                     ->defaultValue('secret')
                 ->end()
+
+                ->scalarNode('target_path_parameter')
+                    ->defaultValue('_target_path')
+                ->end()
             ->end()
         ;
 
