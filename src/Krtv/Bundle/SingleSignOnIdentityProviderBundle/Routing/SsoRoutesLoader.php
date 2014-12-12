@@ -40,10 +40,12 @@ class SsoRoutesLoader implements LoaderInterface
      */
     public function load($resource, $type = null)
     {
-        $routes = new RouteCollection();
+        $route1 = new Route($this->ssoLoginPath, array(
+            '_controller' => 'KrtvSingleSignOnIdentityProviderBundle:SingleSignOn:ssoLogin'
+        ), array(), array(), $this->ssoHost);
 
-        $route = new Route($this->ssoLoginPath, array('_controller' => 'KrtvSingleSignOnIdentityProviderBundle:SingleSignOn:ssoLogin'));
-        $routes->add('sso_login_path', $route);
+        $routes = new RouteCollection();
+        $routes->add('sso_login_path', $route1);
 
         return $routes;
     }

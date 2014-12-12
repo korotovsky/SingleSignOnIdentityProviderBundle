@@ -1,0 +1,75 @@
+framework:
+    secret: %secret%
+    router:
+        resource: %kernel.root_dir%/config/routing.yml
+        strict_requirements: ~
+
+    form: ~
+    csrf_protection: ~
+
+    templating:
+        engines:
+            - twig
+
+    trusted_proxies: ~
+    session: ~
+
+security:
+    access_decision_manager:
+            strategy: affirmative
+
+    providers:
+        in_memory:
+            memory:
+                users:
+                    qwerty:  { password: ytrewq, roles: 'ROLE_USER' }
+
+    encoders:
+        Symfony\Component\Security\Core\User\User: plaintext
+
+    role_hierarchy: ~
+
+    firewalls:
+        main:
+            pattern:    ^/
+            security:   true
+            anonymous:  true
+
+            http_basic:
+                realm: "Secured Demo Area"
+
+            logout:
+                path: /logout
+
+    access_control:
+        - { host: %host%, path: ^/sso/login/$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+
+doctrine:
+    dbal:
+        driver:   pdo_sqlite
+        path:     :memory:
+        memory:   true
+    orm:
+        auto_generate_proxy_classes: true
+        auto_mapping: true
+
+krtv_single_sign_on_identity_provider:
+    host:             %host%
+    host_scheme:      %host.scheme%
+
+    login_path:       /sso/login/
+
+    otp_parameter:    _otp
+    secret_parameter: secret
+
+services:
+
+parameters:
+    secret:       very_secret
+
+    host:         idp.example.com
+    host.scheme:  http
+
+    router.request_context.host:      %host%
+    router.request_context.scheme:    %host.scheme%
+    router.request_context.base_url:  ~

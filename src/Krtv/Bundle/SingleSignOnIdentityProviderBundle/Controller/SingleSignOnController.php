@@ -32,14 +32,12 @@ class SingleSignOnController extends Controller
         }
 
         $otpParameter = $this->container->getParameter('krtv_single_sign_on_identity_provider.otp_parameter');
-
-        $user = $this->get('security.context')->getToken()->getUser();
-
         $otpOrmManager = $this->get('krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm');
         $otpEncoder = $this->get('krtv_single_sign_on_identity_provider.security.authentication.encoder');
 
-        $expires = microtime(true) + 300; // expires in 5 minutes
-        $value = $otpEncoder->generateOneTimePasswordValue($user->getUsername(), $expires);
+        $user = $this->get('security.context')->getToken()->getUser();
+
+        $value = $otpEncoder->generateOneTimePasswordValue($user->getUsername(), microtime(true) + 300);
         $otp = $otpOrmManager->create($value);
 
         $redirectUri = $request->get($targetPathParameter);
