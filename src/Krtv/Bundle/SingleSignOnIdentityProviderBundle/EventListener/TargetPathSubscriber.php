@@ -74,6 +74,11 @@ class TargetPathSubscriber implements EventSubscriberInterface
         // Set request service anyway
         $this->serviceManager->setRequestService($service);
 
+        // logout process dispatched from IdP
+        if ($sessionService === false) {
+            return;
+        }
+
         // If session service already exists, that means logout process already
         // started from SSO service
         if ($sessionService && $request->attributes->get('_route') === 'sso_logout_path') {
