@@ -235,7 +235,16 @@ class SingleSignOnControllerTest extends \PHPUnit_Framework_TestCase
         $this->response = $this->request('GET', $requestUri);
 
         $this->assertEquals(302, $this->response->getStatusCode());
-        $this->assertRegExp('/_otp=([a-zA-Z0-9\%]+)&_hash=([a-zA-Z0-9\%]+)$/', $this->response->headers->get('location'));
+
+        $query = null;
+        $data = parse_url($this->response->headers->get('location'));
+        parse_str($data['query'], $query);
+
+        $this->assertNotNull($query['_otp']);
+        $this->assertNotNull($query['_target_path']);
+        $this->assertNotNull($query['_hash']);
+
+        $this->assertEquals('http://consumer1.com/', $query['_target_path']);
     }
 
     /**

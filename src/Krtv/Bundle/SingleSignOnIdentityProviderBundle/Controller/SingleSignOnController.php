@@ -45,8 +45,9 @@ class SingleSignOnController extends Controller
 
         $user = $this->get('security.context')->getToken()->getUser();
 
-        $value = $otpEncoder->generateOneTimePasswordValue($user->getUsername(), microtime(true) + 300);
-        $otp = $otpOrmManager->create($value);
+        $otp = $otpOrmManager->create(
+            $otpEncoder->generateOneTimePasswordValue($user->getUsername(), microtime(true) + 300)
+        );
 
         $redirectUri = sprintf('%s&%s=%s', $request->get($targetPathParameter), $otpParameter, rawurlencode($otp));
 
