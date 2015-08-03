@@ -2,8 +2,8 @@
 
 namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle\Security\Http;
 
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\Security\Http;
 
@@ -52,7 +52,7 @@ class HttpUtils
      * @param Request $request
      * @param string  $path
      * @param int     $status
-     * @return Response
+     * @return RedirectResponse
      */
     public function createRedirectResponse(Request $request, $path, $status = 302)
     {
@@ -63,7 +63,7 @@ class HttpUtils
      * @param Request $request
      * @param string  $path
      * @param int     $status
-     * @return Response
+     * @return RedirectResponse
      */
     public function createSignedRedirectResponse(Request $request, $path, $status = 302)
     {

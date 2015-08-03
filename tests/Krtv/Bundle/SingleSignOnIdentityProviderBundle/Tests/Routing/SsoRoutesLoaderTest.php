@@ -6,7 +6,7 @@ use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Routing\SsoRoutesLoader;
 
 /**
  * Class KrtvSingleSignOnIdentityProviderBundleTest
- * @package Krtv\Bundle\SingleSignOnIdentityProviderBunde\Tests
+ * @package Krtv\Bundle\SingleSignOnIdentityProviderBunde\Tests\Routing
  */
 class KrtvSingleSignOnIdentityProviderBundleTest extends \PHPUnit_Framework_TestCase
 {
