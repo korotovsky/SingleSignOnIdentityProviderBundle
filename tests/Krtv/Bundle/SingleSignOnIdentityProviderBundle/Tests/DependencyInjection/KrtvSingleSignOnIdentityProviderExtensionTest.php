@@ -48,6 +48,7 @@ class KrtvSingleSignOnIdentityProviderExtensionTest extends \PHPUnit_Framework_T
             'krtv_single_sign_on_identity_provider.manager.logout_manager',
             'krtv_single_sign_on_identity_provider.event_listner.service_subscriber',
             'krtv_single_sign_on_identity_provider.security.authentication.encoder',
+            'krtv_single_sign_on_identity_provider.security.http_utils',
             'krtv_single_sign_on_identity_provider.uri_signer',
         );
 

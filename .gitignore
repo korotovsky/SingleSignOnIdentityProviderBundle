@@ -1,3 +1,4 @@
 .idea/
 vendor/
 tests/Krtv/Bundle/SingleSignOnIdentityProviderBundle/Tests/Application/cache
+composer.lock
