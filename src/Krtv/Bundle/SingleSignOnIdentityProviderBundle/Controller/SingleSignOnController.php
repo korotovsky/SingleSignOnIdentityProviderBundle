@@ -2,6 +2,8 @@
 
 namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle\Controller;
 
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Event\SsoAuthorizedEvent;
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Event\SsoEvents;
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -36,6 +38,8 @@ class SingleSignOnController extends Controller
         } elseif (false === $this->get('security.context')->isGranted('ROLE_USER')) {
             throw new AccessDeniedException();
         }
+
+        $this->get('event_dispatcher')->dispatch(SsoEvents::SSO_AUTHORIZED, new SsoAuthorizedEvent());
 
         $otpOrmManager = $this->get('krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm');
         $otpEncoder = $this->get('krtv_single_sign_on_identity_provider.security.authentication.encoder');
