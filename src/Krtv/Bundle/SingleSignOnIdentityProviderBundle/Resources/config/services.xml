@@ -15,7 +15,7 @@
         <parameter key="krtv_single_sign_on_identity_provider.manager.logout_manager.class">Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\LogoutManager</parameter>
 
         <parameter key="krtv_single_sign_on_identity_provider.event_listner.service_subscriber.class">Krtv\Bundle\SingleSignOnIdentityProviderBundle\EventListener\TargetPathSubscriber</parameter>
-        <parameter key="krtv_single_sign_on_identity_provider..security.http_utils.class">Krtv\Bundle\SingleSignOnIdentityProviderBundle\Security\Http\HttpUtils</parameter>
+        <parameter key="krtv_single_sign_on_identity_provider.security.http_utils.class">Krtv\Bundle\SingleSignOnIdentityProviderBundle\Security\Http\HttpUtils</parameter>
     </parameters>
 
     <services>
@@ -56,7 +56,7 @@
             <argument/> <!-- secret -->
         </service>
 
-        <service id="krtv_single_sign_on_identity_provider.security.http_utils" class="%krtv_single_sign_on_identity_provider..security.http_utils.class%">
+        <service id="krtv_single_sign_on_identity_provider.security.http_utils" class="%krtv_single_sign_on_identity_provider.security.http_utils.class%">
             <argument type="service" id="krtv_single_sign_on_identity_provider.uri_signer"/>
             <argument type="service" id="security.http_utils"/>
             <argument type="string">%krtv_single_sign_on_identity_provider.otp_parameter%</argument>
