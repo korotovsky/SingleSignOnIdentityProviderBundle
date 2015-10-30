@@ -33,9 +33,9 @@ class SingleSignOnController extends Controller
             throw new BadRequestHttpException('Malformed uri');
         }
 
-        if (false === $this->get('security.context')->isGranted('ROLE_USER') && $request->get('_failure_path')) {
+        if (false === $this->get('security.authorization_checker')->isGranted('ROLE_USER') && $request->get('_failure_path')) {
             return $httpUtils->createRedirectResponse($request, $request->get('_failure_path'));
-        } elseif (false === $this->get('security.context')->isGranted('ROLE_USER')) {
+        } elseif (false === $this->get('security.authorization_checker')->isGranted('ROLE_USER')) {
             throw new AccessDeniedException();
         }
 
@@ -61,7 +61,7 @@ class SingleSignOnController extends Controller
         $logoutManager = $this->get('krtv_single_sign_on_identity_provider.manager.logout_manager');
         $httpUtils = $this->get('krtv_single_sign_on_identity_provider.security.http_utils');
 
-        if (!$request->get(ServiceManager::SERVICE_PARAM)) {
+        if (!$serviceManager->getRequestService()) {
             $serviceManager->setDefaults();
         }
  

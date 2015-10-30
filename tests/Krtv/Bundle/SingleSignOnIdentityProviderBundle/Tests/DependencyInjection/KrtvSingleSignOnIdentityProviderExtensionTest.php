@@ -2,6 +2,7 @@
 
 namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection;
 
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
@@ -15,13 +16,7 @@ class KrtvSingleSignOnIdentityProviderExtensionTest extends \PHPUnit_Framework_T
      */
     public function testLoad()
     {
-        $containerMock = $this->getMockBuilder('Symfony\Component\DependencyInjection\ContainerBuilder')
-            ->enableProxyingToOriginalMethods()
-            ->disableOriginalConstructor()
-            ->setConstructorArgs(array(
-                new ParameterBag()
-            ))
-            ->getMock();
+        $container = new ContainerBuilder();
 
         $configs = array(
             array(
@@ -39,24 +34,24 @@ class KrtvSingleSignOnIdentityProviderExtensionTest extends \PHPUnit_Framework_T
         );
 
         $extension = new KrtvSingleSignOnIdentityProviderExtension();
-        $extension->load($configs, $containerMock);
+        $extension->load($configs, $container);
 
         $services = array(
             'krtv_single_sign_on_identity_provider.routing.loader',
             'krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm',
             'krtv_single_sign_on_identity_provider.manager.service_manager',
             'krtv_single_sign_on_identity_provider.manager.logout_manager',
-            'krtv_single_sign_on_identity_provider.event_listner.service_subscriber',
+            'krtv_single_sign_on_identity_provider.event_listener.service_subscriber',
             'krtv_single_sign_on_identity_provider.security.authentication.encoder',
             'krtv_single_sign_on_identity_provider.security.http_utils',
             'krtv_single_sign_on_identity_provider.uri_signer',
         );
 
         foreach ($services as $service) {
-            $this->assertInstanceOf('Symfony\Component\DependencyInjection\Definition', $containerMock->getDefinition($service));
+            $this->assertInstanceOf('Symfony\Component\DependencyInjection\Definition', $container->getDefinition($service));
         }
 
-        $this->assertCount(count($services), $containerMock->getDefinitions());
+        $this->assertCount(count($services), $container->getDefinitions());
 
         $aliases = array(
             'sso_identity_provider.service_manager',
@@ -66,10 +61,10 @@ class KrtvSingleSignOnIdentityProviderExtensionTest extends \PHPUnit_Framework_T
         );
 
         foreach ($aliases as $alias) {
-            $this->assertInstanceOf('Symfony\Component\DependencyInjection\Alias', $containerMock->getAlias($alias));
+            $this->assertInstanceOf('Symfony\Component\DependencyInjection\Alias', $container->getAlias($alias));
         }
 
-        $this->assertCount(count($aliases), $containerMock->getAliases());
+        $this->assertCount(count($aliases), $container->getAliases());
 
         $parameters = array(
             'krtv_single_sign_on_identity_provider.host' => 'idp.example.com',
@@ -80,17 +75,10 @@ class KrtvSingleSignOnIdentityProviderExtensionTest extends \PHPUnit_Framework_T
             'krtv_single_sign_on_identity_provider.otp_parameter' => '_otp',
             'krtv_single_sign_on_identity_provider.secret_parameter' => 'secret',
             'krtv_single_sign_on_identity_provider.security.firewall_id' => 'main',
-            'krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm.class' => 'Krtv\SingleSignOn\Manager\ORM\OneTimePasswordManager',
-            'krtv_single_sign_on_identity_provider.encoder.otp.class' => 'Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder',
-            'krtv_single_sign_on_identity_provider.routing.loader.class' => 'Krtv\Bundle\SingleSignOnIdentityProviderBundle\Routing\SsoRoutesLoader',
-            'krtv_single_sign_on_identity_provider.entity.class' => 'Krtv\Bundle\SingleSignOnIdentityProviderBundle\Entity\OneTimePassword',
-            'krtv_single_sign_on_identity_provider.manager.service_manager.class' => 'Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager',
-            'krtv_single_sign_on_identity_provider.manager.logout_manager.class' => 'Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\LogoutManager',
-            'krtv_single_sign_on_identity_provider.event_listner.service_subscriber.class' => 'Krtv\Bundle\SingleSignOnIdentityProviderBundle\EventListener\TargetPathSubscriber',
         );
 
         foreach ($parameters as $parameterName => $parameterValue) {
-            $this->assertEquals($parameterValue, $containerMock->getParameter($parameterName));
+            $this->assertEquals($parameterValue, $container->getParameter($parameterName));
         }
     }
 

@@ -84,12 +84,6 @@ services:
         tags:
             - { name: sso.service_provider, service: consumer2 }
 
-    # Hack for \Symfony\Component\DependencyInjection\Compiler\RemoveUnusedDefinitionsPass
-    application.just_keep_security.http_utils.in_contaner:
-        class: stdClass
-        arguments:
-            - @security.http_utils
-
 parameters:
     secret:       very_secret
 

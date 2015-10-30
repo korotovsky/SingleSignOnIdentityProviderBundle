@@ -4,9 +4,12 @@ namespace Krtv\Bundle\SingleSignOnIdentityProviderBunde\Tests\Manager;
 
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\LogoutManager;
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
+use Symfony\Component\HttpKernel\UriSigner;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
@@ -29,6 +32,16 @@ class LogoutManagerTest extends \PHPUnit_Framework_TestCase
      * @var ServiceProviderInterface[]
      */
     private $consumers = array();
+
+    /**
+     * @var UriSigner
+     */
+    private $uriSigner;
+
+    /**
+     * @var RequestStack
+     */
+    private $requestStack;
 
     /**
      * The next logout url should be http://consumer1.com/logout
@@ -112,7 +125,7 @@ class LogoutManagerTest extends \PHPUnit_Framework_TestCase
         $routerMock->expects($this->once())
             ->method('generate')
             ->willReturnMap(array(
-                array('_security_logout', array(), false, 'http://idp.example.com/logout')
+                array('_security_logout', array(), UrlGeneratorInterface::ABSOLUTE_PATH, 'http://idp.example.com/logout')
             ));
 
         $logoutManager = new LogoutManager($serviceManagerMock, $this->getSessionMock(), $routerMock);
@@ -170,17 +183,47 @@ class LogoutManagerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @return RequestStack
+     */
+    private function getRequestStackMock()
+    {
+        if ($this->requestStack === null) {
+            $this->requestStack = new RequestStack();
+        }
+
+        return $this->requestStack;
+    }
+
+    /**
+     * @return UriSigner
+     */
+    private function getUriSignerMock()
+    {
+        if ($this->uriSigner === null) {
+            $this->uriSigner = new UriSigner('secret');
+        }
+
+        return $this->uriSigner;
+    }
+
+    /**
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
     private function getServiceManagerMock()
     {
         $serviceManager = $this->getMockBuilder('Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager')
             ->setConstructorArgs(array(
+                $this->getRequestStackMock(),
                 $this->getSessionMock(),
                 'main',
                 array(
                     'consumer1' => $this->getConsumerMock('consumer1'),
                     'consumer2' => $this->getConsumerMock('consumer2'),
+                ),
+                array(
+                    'service_parameter' => 'service',
+                    'service_extra_parameter' => 'service_extra',
+                    'target_path_parameter' => '_target_path',
                 )
             ))
             ->getMock();

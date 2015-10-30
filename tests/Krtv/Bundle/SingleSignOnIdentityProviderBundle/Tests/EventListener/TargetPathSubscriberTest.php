@@ -4,12 +4,14 @@ namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle\EventListener;
 
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\UriSigner;
 
 /**
  * Class TargetPathSubscriberTest
@@ -26,6 +28,16 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
      * @var ServiceProviderInterface[]
      */
     private $consumers = array();
+
+    /**
+     * @var RequestStack
+     */
+    private $requestStack;
+
+    /**
+     * @var UriSigner
+     */
+    private $uriSigner;
 
     /**
      *
@@ -45,12 +57,21 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
      */
     public function testOnKernelRequestIsNotMasterRequest()
     {
+        $requestStackMock = $this->getRequestStackMock();
+        $uriSignerMock = $this->getUriSignerMock();
+
         $serviceManagerMock = $this->getMockBuilder('Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager')
             ->setConstructorArgs(array(
+                $requestStackMock,
                 $this->getSessionMock(),
                 'main',
                 array(
                     'consumer1' => $this->getConsumerMock('consumer1')
+                ),
+                array(
+                    'service_parameter' => 'service',
+                    'service_extra_parameter' => 'service_extra',
+                    'target_path_parameter' => '_target_path',
                 )
             ))
             ->getMock();
@@ -69,6 +90,8 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('get')
             ->willReturn(null);
 
+        $requestStackMock->push($requestMock);
+
         $eventMock = $this->getMockBuilder('Symfony\Component\HttpKernel\Event\GetResponseEvent')
             ->setConstructorArgs(array(
                 $this->getMockBuilder('Symfony\Component\HttpKernel\HttpKernelInterface')->getMock(),
@@ -80,7 +103,7 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('isMasterRequest')
                 ->willReturn(false);
 
-        $subscriber = new TargetPathSubscriber($serviceManagerMock);
+        $subscriber = new TargetPathSubscriber($serviceManagerMock, $uriSignerMock);
         $subscriber->onKernelRequest($eventMock);
     }
 
@@ -89,32 +112,40 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
      */
     public function testOnKernelRequestDoesNotHaveServiceParameter()
     {
+        $requestStackMock = $this->getRequestStackMock();
+        $uriSignerMock = $this->getUriSignerMock();
+
         $serviceManagerMock = $this->getMockBuilder('Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager')
             ->setConstructorArgs(array(
+                $requestStackMock,
                 $this->getSessionMock(),
                 'main',
                 array(
                     'consumer1' => $this->getConsumerMock('consumer1'),
                     'consumer2' => $this->getConsumerMock('consumer2')
+                ),
+                array(
+                    'service_parameter' => 'service',
+                    'service_extra_parameter' => 'service_extra',
+                    'target_path_parameter' => '_target_path',
                 )
             ))
             ->getMock();
+        $serviceManagerMock->expects($this->once())
+            ->method('getRequestService')
+            ->willReturn(null);
+        $serviceManagerMock->expects($this->once())
+            ->method('getRequestServiceExtra')
+            ->willReturn(null);
+        $serviceManagerMock->expects($this->once())
+            ->method('getRequestTargetPath')
+            ->willReturn(null);
         $serviceManagerMock->expects($this->never())
             ->method('getSessionService')
             ->willReturn(null);
-        $serviceManagerMock->expects($this->never())
-            ->method('setRequestService')
-            ->willReturn(null);
-        $serviceManagerMock->expects($this->never())
-            ->method('setSessionService')
-            ->willReturn(null);
 
         $requestMock = $this->getMockBuilder('Symfony\Component\HttpFoundation\Request')->getMock();
-        $requestMock->expects($this->once())
-            ->method('get')
-            ->willReturnMap(array(
-                array('service', null, false, null)
-            ));
+        $requestStackMock->push($requestMock);
 
         $eventMock = $this->getMockBuilder('Symfony\Component\HttpKernel\Event\GetResponseEvent')
             ->setConstructorArgs(array(
@@ -130,7 +161,7 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('getRequest')
             ->willReturn($requestMock);
 
-        $subscriber = new TargetPathSubscriber($serviceManagerMock);
+        $subscriber = new TargetPathSubscriber($serviceManagerMock, $uriSignerMock);
         $subscriber->onKernelRequest($eventMock);
     }
 
@@ -139,13 +170,22 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
      */
     public function testOnKernelRequestLogoutProcessAlreadyActivatedFromConsumer1()
     {
+        $requestStackMock = $this->getRequestStackMock();
+        $uriSignerMock = $this->getUriSignerMock();
+
         $serviceManagerMock = $this->getMockBuilder('Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager')
             ->setConstructorArgs(array(
+                $requestStackMock,
                 $this->getSessionMock(),
                 'main',
                 array(
                     'consumer1' => $this->getConsumerMock('consumer1'),
                     'consumer2' => $this->getConsumerMock('consumer2')
+                ),
+                array(
+                    'service_parameter' => 'service',
+                    'service_extra_parameter' => 'service_extra',
+                    'target_path_parameter' => '_target_path',
                 )
             ))
             ->getMock();
@@ -153,8 +193,8 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('getSessionService')
             ->willReturn('consumer1');
         $serviceManagerMock->expects($this->once())
-            ->method('setRequestService')
-            ->with('consumer2');
+            ->method('getRequestService')
+            ->willReturn('consumer2');
         $serviceManagerMock->expects($this->never())
             ->method('setSessionService')
             ->willReturn(null);
@@ -175,7 +215,7 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('getRequest')
             ->willReturn($requestMock);
 
-        $subscriber = new TargetPathSubscriber($serviceManagerMock);
+        $subscriber = new TargetPathSubscriber($serviceManagerMock, $uriSignerMock);
         $subscriber->onKernelRequest($eventMock);
     }
 
@@ -184,13 +224,22 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
      */
     public function testOnKernelRequestDoNotOverrideOldIntentionConsumer1WithConsumer1()
     {
+        $requestStackMock = $this->getRequestStackMock();
+        $uriSignerMock = $this->getUriSignerMock();
+
         $serviceManagerMock = $this->getMockBuilder('Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager')
             ->setConstructorArgs(array(
+                $requestStackMock,
                 $this->getSessionMock(),
                 'main',
                 array(
                     'consumer1' => $this->getConsumerMock('consumer1'),
                     'consumer2' => $this->getConsumerMock('consumer2')
+                ),
+                array(
+                    'service_parameter' => 'service',
+                    'service_extra_parameter' => 'service_extra',
+                    'target_path_parameter' => '_target_path',
                 )
             ))
             ->getMock();
@@ -198,8 +247,8 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('getSessionService')
             ->willReturn('consumer1');
         $serviceManagerMock->expects($this->once())
-            ->method('setRequestService')
-            ->with('consumer1');
+            ->method('getRequestService')
+            ->willReturn('consumer1');
         $serviceManagerMock->expects($this->never())
             ->method('setSessionService');
 
@@ -219,7 +268,7 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('getRequest')
             ->willReturn($requestMock);
 
-        $subscriber = new TargetPathSubscriber($serviceManagerMock);
+        $subscriber = new TargetPathSubscriber($serviceManagerMock, $uriSignerMock);
         $subscriber->onKernelRequest($eventMock);
     }
 
@@ -228,13 +277,22 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
      */
     public function testOnKernelRequestOverrideOldIntentionConsumer1WithConsumer2()
     {
+        $requestStackMock = $this->getRequestStackMock();
+        $uriSignerMock = $this->getUriSignerMock();
+
         $serviceManagerMock = $this->getMockBuilder('Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager')
             ->setConstructorArgs(array(
+                $requestStackMock,
                 $this->getSessionMock(),
                 'main',
                 array(
                     'consumer1' => $this->getConsumerMock('consumer1'),
                     'consumer2' => $this->getConsumerMock('consumer2')
+                ),
+                array(
+                    'service_parameter' => 'service',
+                    'service_extra_parameter' => 'service_extra',
+                    'target_path_parameter' => '_target_path',
                 )
             ))
             ->getMock();
@@ -242,8 +300,8 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('getSessionService')
             ->willReturn('consumer1');
         $serviceManagerMock->expects($this->once())
-            ->method('setRequestService')
-            ->with('consumer2');
+            ->method('getRequestService')
+            ->willReturn('consumer2');
         $serviceManagerMock->expects($this->once())
             ->method('setSessionService')
             ->with('consumer2');
@@ -264,7 +322,7 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('getRequest')
             ->willReturn($requestMock);
 
-        $subscriber = new TargetPathSubscriber($serviceManagerMock);
+        $subscriber = new TargetPathSubscriber($serviceManagerMock, $uriSignerMock);
         $subscriber->onKernelRequest($eventMock);
     }
 
@@ -302,5 +360,29 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
         }
 
         return $this->session;
+    }
+
+    /**
+     * @return RequestStack
+     */
+    private function getRequestStackMock()
+    {
+        if ($this->requestStack === null) {
+            $this->requestStack = new RequestStack();
+        }
+
+        return $this->requestStack;
+    }
+
+    /**
+     * @return UriSigner
+     */
+    private function getUriSignerMock()
+    {
+        if ($this->uriSigner === null) {
+            $this->uriSigner = new UriSigner('secret');
+        }
+
+        return $this->uriSigner;
     }
 }

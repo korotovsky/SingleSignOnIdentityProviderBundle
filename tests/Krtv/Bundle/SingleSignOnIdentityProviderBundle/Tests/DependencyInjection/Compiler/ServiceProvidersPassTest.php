@@ -67,7 +67,7 @@ class ServiceProvidersPassTest extends \PHPUnit_Framework_TestCase
         $serviceManager->expects($this->once())
             ->method('replaceArgument')
             ->withConsecutive(
-                array(2, array(
+                array(3, array(
                     'consumer1' => $consumer1,
                     'consumer2' => $consumer2,
                 ))

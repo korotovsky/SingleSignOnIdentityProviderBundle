@@ -5,7 +5,9 @@ namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle\EventListener;
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\UriSigner;
 
 /**
  * Class TargetPathSubscriber
@@ -19,11 +21,18 @@ class TargetPathSubscriber implements EventSubscriberInterface
     private $serviceManager;
 
     /**
-     * @param ServiceManager $serviceManager
+     * @var UriSigner
      */
-    public function __construct(ServiceManager $serviceManager)
+    private $uriSigner;
+
+    /**
+     * @param ServiceManager $serviceManager
+     * @param UriSigner $uriSigner
+     */
+    public function __construct(ServiceManager $serviceManager, UriSigner $uriSigner)
     {
         $this->serviceManager = $serviceManager;
+        $this->uriSigner = $uriSigner;
     }
 
     /**
@@ -63,20 +72,19 @@ class TargetPathSubscriber implements EventSubscriberInterface
         }
 
         $request = $event->getRequest();
-        $service = $request->get(ServiceManager::SERVICE_PARAM);
+
+        $service = $this->serviceManager->getRequestService();
+        $serviceExtra = $this->serviceManager->getRequestServiceExtra();
+        $targetPath = $this->serviceManager->getRequestTargetPath();
+
         if (!$service) {
             return;
         }
 
         // Get current session service
         $sessionService = $this->serviceManager->getSessionService();
-
-        // Set request service anyway
-        $this->serviceManager->setRequestService($service);
-
-        // logout process dispatched from IdP
         if ($sessionService === false) {
-            return;
+            return; // logout process dispatched from IdP
         }
 
         // If session service already exists, that means logout process already
@@ -90,6 +98,26 @@ class TargetPathSubscriber implements EventSubscriberInterface
         if (!$sessionService || $sessionService !== $service) {
             $this->serviceManager->setSessionService($service);
         }
+
+        // Check for _target_path parameter and check its signature otherwise set default url
+        if ($service && $targetPath) {
+            $serviceManager = $this->serviceManager->getServiceManager($service);
+
+            if (!$this->uriSigner->check($targetPath)) {
+                $targetPath = $serviceManager->getServiceIndexUrl();
+            }
+
+            $this->serviceManager->setSessionTargetPath($targetPath);
+        }
+
+        // If query has both service and extra parameters, then we have to check the signature
+        // and store extra data to the session, otherwise throw BadHttpRequestException()
+        if ($service && $serviceExtra) {
+            if (!$this->uriSigner->check($request->getSchemeAndHttpHost() . $request->getRequestUri())) {
+                throw new BadRequestHttpException('Invalid signature for signing extra data from service provider.');
+            }
+
+            $this->serviceManager->setSessionExtra($serviceExtra);
+        }
     }
 }
-

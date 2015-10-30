@@ -29,6 +29,6 @@ class ServiceProvidersPass implements CompilerPassInterface
         }
 
         $container->getDefinition('krtv_single_sign_on_identity_provider.manager.service_manager')
-            ->replaceArgument(2, $services);
+            ->replaceArgument(3, $services);
     }
 }

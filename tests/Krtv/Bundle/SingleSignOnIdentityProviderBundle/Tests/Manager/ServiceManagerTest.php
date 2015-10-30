@@ -4,6 +4,8 @@ namespace Krtv\Bundle\SingleSignOnIdentityProviderBunde\Tests\Manager;
 
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager;
 use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -32,7 +34,11 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
     {
         $this->setExpectedException('RuntimeException', 'No ServiceProvider managers found. Make sure that you have at least one ServiceProvider manager tagged with "sso.service_provider"');
 
-        new ServiceManager($this->getSessionMock(), 'main', array());
+        new ServiceManager(new RequestStack(), $this->getSessionMock(), 'main', array(), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
+        ));
     }
 
     /**
@@ -40,8 +46,12 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetRegisteredServiceNames()
     {
-        $serviceManager = new ServiceManager($this->getSessionMock(), 'main', array(
+        $serviceManager = new ServiceManager(new RequestStack(), $this->getSessionMock(), 'main', array(
             'consumer1' => $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
         ));
 
         $actual = $serviceManager->getServices();
@@ -55,8 +65,12 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetServiceManager()
     {
-        $serviceManager = new ServiceManager($this->getSessionMock(), 'main', array(
+        $serviceManager = new ServiceManager(new RequestStack(), $this->getSessionMock(), 'main', array(
             'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
         ));
 
         $actual = $serviceManager->getServiceManager('consumer1');
@@ -72,8 +86,12 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
     {
         $this->setExpectedException('InvalidArgumentException', 'Unknown service consumer2');
 
-        $serviceManager = new ServiceManager($this->getSessionMock(), 'main', array(
+        $serviceManager = new ServiceManager(new RequestStack(), $this->getSessionMock(), 'main', array(
             'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
         ));
 
         $actual = $serviceManager->getServiceManager('consumer2');
@@ -87,8 +105,12 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
         $sessionMock = $this->getSessionMock();
         $sessionMock->set('_target/service', 'consumer1');
 
-        $serviceManager = new ServiceManager($sessionMock, 'main', array(
+        $serviceManager = new ServiceManager(new RequestStack(), $sessionMock, 'main', array(
             'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
         ));
 
         $actual = $serviceManager->getSessionService();
@@ -102,8 +124,17 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
      */
     public function testSetAndGetServiceNameFromRequest()
     {
-        $serviceManager = new ServiceManager($this->getSessionMock(), 'main', array(
+        $requestMock = new Request();
+
+        $requestStackMock = new RequestStack();
+        $requestStackMock->push($requestMock);
+
+        $serviceManager = new ServiceManager($requestStackMock, $this->getSessionMock(), 'main', array(
             'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
         ));
 
         $actual = $serviceManager->getRequestService();
@@ -111,7 +142,18 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($expected, $actual);
 
-        $serviceManager->setRequestService('consumer1');
+        $requestMock = new Request(array('service' => 'consumer1'));
+
+        $requestStackMock = new RequestStack();
+        $requestStackMock->push($requestMock);
+
+        $serviceManager = new ServiceManager($requestStackMock, $this->getSessionMock(), 'main', array(
+            'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
+        ));
 
         $actual = $serviceManager->getRequestService();
         $expected = 'consumer1';
@@ -126,8 +168,12 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
     {
         $sessionMock = $this->getSessionMock();
 
-        $serviceManager = new ServiceManager($sessionMock, 'main', array(
+        $serviceManager = new ServiceManager(new RequestStack(), $sessionMock, 'main', array(
             'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
         ));
 
         $actual = $serviceManager->getSessionService();
@@ -139,7 +185,6 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('consumer1', $serviceManager->getSessionService());
         $this->assertEquals('consumer1', $sessionMock->get('_target/service'));
-        $this->assertEquals('http://consumer1.com/', $sessionMock->get('_security.main.target_path'));
     }
 
     /**
@@ -149,8 +194,12 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
     {
         $sessionMock = $this->getSessionMock();
 
-        $serviceManager = new ServiceManager($sessionMock, 'main', array(
+        $serviceManager = new ServiceManager(new RequestStack(), $sessionMock, 'main', array(
             'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
         ));
 
         $actual = $serviceManager->setDefaults();
@@ -172,8 +221,12 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
         $sessionMock->set('_target/service', 'consumer1');
         $sessionMock->set('_security.main.target_path', 'http://consumer1.com/');
 
-        $serviceManager = new ServiceManager($sessionMock, 'main', array(
+        $serviceManager = new ServiceManager(new RequestStack(), $sessionMock, 'main', array(
             'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
+        ), array(
+            'service_parameter' => 'service',
+            'service_extra_parameter' => 'service_extra',
+            'target_path_parameter' => '_target_path',
         ));
 
         $this->assertEquals('consumer1', $sessionMock->get('_target/service'));

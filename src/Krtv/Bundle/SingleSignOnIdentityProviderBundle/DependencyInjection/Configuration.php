@@ -63,6 +63,14 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('target_path_parameter')
                     ->defaultValue('_target_path')
                 ->end()
+
+                ->scalarNode('service_parameter')
+                    ->defaultValue('service')
+                ->end()
+
+                ->scalarNode('service_extra_parameter')
+                    ->defaultValue('service_extra')
+                ->end()
             ->end()
         ;
 
