@@ -21,7 +21,7 @@
 
         "symfony/symfony": "~3.0",
 
-        "korotovsky/sso-library": "~0.2.0",
+        "korotovsky/sso-library": "~0.3.0",
 
         "ext-openssl": "*"
     },
