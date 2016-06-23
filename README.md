@@ -82,7 +82,7 @@ Feel free to modify `ServiceProviders\*` classes. They contain your own specific
 # app/config/security.yml
 security:
     access_control:
-        - { path: ^/sso/login$, roles: [ROLE_USER, IS_AUTHENTICATED_FULLY] }
+        - { path: ^/sso/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
 ```
 
 That's it for Identity Provider. Now you can continue configure [ServiceProvider part](https://github.com/korotovsky/SingleSignOnServiceProviderBundle#single-sign-on-service-provider)
