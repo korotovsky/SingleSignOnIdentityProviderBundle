@@ -19,7 +19,7 @@ and redirects all configured SSO-routes to authenticate via a one-time-password.
 
 Installation
 ------------
-Installation is a quick 9 steps process:
+Installation is a 10 steps process:
 
 1. Download SingleSignOnIdentityProviderBundle using composer
 2. Enable the bundle
@@ -27,9 +27,10 @@ Installation is a quick 9 steps process:
 4. Configure SingleSignOnIdentityProviderBundle
 5. Enable the route to validate OTP
 6. Modify security settings
-7. Create OTP route
-8. Add redirect path to login form
-9. Update database schema
+7. Add / Modify login and logout success handlers
+8. Create OTP route
+9. Add redirect path to login form
+10. Update database schema
 
 ### Step 1: Download SingleSignOnIdentityProviderBundle using composer
 
@@ -220,12 +221,282 @@ sso:
 # app/config/security.yml
 security:
     access_control:
-        # We need to allow users to access the /sso/login route 
+        # We need to allow users to access the /sso/login route
         # without being logged in
         - { path: ^/sso/login, role: IS_AUTHENTICATED_ANONYMOUSLY }
 ```
 
-### Step 7: Create OTP route
+### Step 7: Add / Modify login and logout success handlers
+
+Modify your existing constructor for login and logout success handlers to include the following service:
+
+```
+sso_identity_provider.otp_manager
+```
+
+In your method used as for the succes handler, add near the end a call to the method `clear()` of that service.
+
+In case you don't have a success handler for either login or logout, here's a sample implementation for it:
+
+``` php
+<?php
+// src/AcmeBundle/Handler/LoginSuccessHandler.php
+
+namespace AcmeBundle\Handler;
+
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager;
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface;
+
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpKernel\UriSigner;
+use Symfony\Component\Routing\Router;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface;
+
+/**
+ * Class LoginSuccessHandler.
+ */
+class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
+{
+    /**
+     * @var ServiceManager
+     */
+    protected $serviceManager;
+
+    /**
+     * @var UriSigner
+     */
+    protected $uriSigner;
+
+    /**
+     * @var SessionInterface
+     */
+    protected $session;
+
+    /**
+     * @var Router
+     */
+    protected $router;
+
+    /**
+     * @param ServiceManager $serviceManager
+     * @param UriSigner $uriSigner
+     * @param SessionInterface $session
+     * @param Router $router
+     */
+    public function __construct(
+        ServiceManager $serviceManager,
+        UriSigner $uriSigner,
+        SessionInterface $session,
+        Router $router
+    ) {
+        $this->serviceManager = $serviceManager;
+        $this->uriSigner = $uriSigner;
+        $this->session = $session;
+        $this->router = $router;
+    }
+
+    /**
+     * @param Request $request
+     * @param TokenInterface $token
+     *
+     * @return RedirectResponse
+     */
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token)
+    {
+        $redirectUrl = $this->session->get('_security.main.target_path', '/');
+
+        if ($request->query->has('_target_path')) {
+            if ($this->uriSigner->check($request->query->get('_target_path'))) {
+                $redirectUrl = $request->query->get('_target_path');
+            }
+        }
+
+        if (strpos($redirectUrl, '/sso/login') === false) {
+            $targetService = $this->serviceManager->getSessionService();
+
+            if ($targetService != null) {
+                $redirectUrl = $this->getSsoWrappedUrl($token, $targetService, $redirectUrl);
+            } else {
+                $redirectUrl = $this->router->generate('_passport_dashboard_index');
+            }
+        }
+
+        $this->serviceManager->clear();
+
+        if ($request->isXmlHttpRequest()) {
+            return new JsonResponse([
+                'status' => true,
+                'location' => $redirectUrl,
+            ]);
+        }
+
+        return new RedirectResponse($redirectUrl);
+    }
+
+    /**
+     * @param TokenInterface $token
+     * @param string $targetService
+     * @param string $redirectUrl
+     *
+     * @return string
+     */
+    protected function getSsoWrappedUrl(TokenInterface $token, $targetService, $redirectUrl)
+    {
+        /** @var $serviceManager ServiceProviderInterface */
+        $serviceManager = $this->serviceManager->getServiceManager($targetService);
+        $owner = $token->getUser();
+
+        $wrappedSsoUrl = $this->router->generate('sso_login_path', [
+            '_target_path' => $serviceManager->getOTPValidationUrl([
+                '_target_path' => $redirectUrl,
+            ]),
+            'service' => $targetService,
+        ], Router::ABSOLUTE_URL);
+
+        return $this->uriSigner->sign($wrappedSsoUrl);
+    }
+}
+?>
+```
+
+``` php
+<?php
+// src/AcmeBundle/Handler/LogoutSuccessHandler.php
+
+namespace AcmeBundle\Handler;
+
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager;
+
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpKernel\UriSigner;
+use Symfony\Component\Routing\Router;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Http\Logout\LogoutSuccessHandlerInterface;
+
+/**
+* Class LogoutSuccessHandler
+*/
+class LogoutSuccessHandler implements LogoutSuccessHandlerInterface
+{
+    /**
+     * @var ServiceManager;
+     */
+    protected $serviceManager;
+
+    /**
+     * @var UriSigner
+     */
+    protected $uriSigner;
+
+    /**
+     * @var SessionInterface
+     */
+    protected $session;
+
+    /**
+     * @var Router
+     */
+    protected $router;
+
+    /**
+     * Constructor
+     *
+     * @param ServiceManager   $serviceManager
+     * @param UriSigner        $uriSigner
+     * @param SessionInterface $session
+     * @param Router           $router
+     */
+    public function __construct(
+        ServiceManager $serviceManager,
+        UriSigner $uriSigner,
+        SessionInterface $session,
+        Router $router
+    ) {
+        $this->serviceManager = $serviceManager;
+        $this->uriSigner = $uriSigner;
+        $this->session = $session;
+        $this->router = $router;
+    }
+
+    /**
+     * Logout success handler
+     *
+     * @param  Request        $request
+     *
+     * @return RedirectResponse|JsonResponse
+     */
+    public function onLogoutSuccess(Request $request)
+    {
+        $redirectUrl = $this->session->get('_security.main.target_path', '/');
+
+        if ($request->query->has('_target_path')) {
+            if ($this->uriSigner->check($request->query->get('_target_path'))) {
+                $redirectUrl = $request->query->get('_target_path');
+            }
+        }
+
+        $this->serviceManager->clear();
+
+        if ($request->isXmlHttpRequest()) {
+            return new JsonResponse([
+                'status' => true,
+                'location' => $redirectUrl,
+            ]);
+        }
+
+        return new RedirectResponse($redirectUrl);
+    }
+}
+?>
+```
+
+Define them as services
+
+``` yaml
+# app/config/services.yml
+services:
+    acme_bundle.security.login_success_handler:
+        class: AcmeBundle\Handler\LoginSuccessHandler
+        arguments:
+            - "@sso_identity_provider.service_manager"
+            - "@sso_identity_provider.uri_signer"
+            - "@session"
+            - "@router"
+
+    acme_bundle.security.logout_success_handler:
+        class: AcmeBundle\Handler\LogoutSuccessHandler
+        arguments:
+            - "@sso_identity_provider.service_manager"
+            - "@sso_identity_provider.uri_signer"
+            - "@session"
+            - "@router"
+```
+
+And then finally, set the services as handlers in your firewall definition
+
+``` yaml
+# app/config/security.yml
+security:
+    firewall:
+        main:
+            # ...
+            form_login:
+                # ...
+                success_handler: acme_bundle.security.login_success_handler
+
+            logout:
+                # ...
+                success_handler: acme_bundle.security.logout_success_handler
+```
+
+### Step 8: Create OTP route
 
 In order to validate the OTP and authenticate the user, you must create a route that can retrieve the OTP details
 from the database and that can verify if it is valid.
@@ -289,7 +560,7 @@ class OtpController extends Controller
 ?>
 ```
 
-### Step 8: Add redirect path to login form
+### Step 9: Add redirect path to login form
 
 In your login form, add a hidden input with the name `_target_path` and the value
 `{{ app.session.get('_security.main.target_path') }}` like so:
@@ -300,7 +571,7 @@ In your login form, add a hidden input with the name `_target_path` and the valu
 
 This will be used to redirect the user after login to the OTP validation route.
 
-### Step 9: Update database schema
+### Step 10: Update database schema
 
 To be able to store the OTPs, you must run the command:
 
