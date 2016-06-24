@@ -124,7 +124,7 @@ class ServiceManager
     }
 
     /**
-     * Get target path from _security.ID.target_path.
+     * Get target path from the request.
      *
      * @return array|null
      */
@@ -153,6 +153,17 @@ class ServiceManager
     public function getSessionExtra()
     {
         return $this->session->get($this->getSessionExtraKey());
+    }
+
+    /**
+     * Get target path from _security.ID.target_path.
+     *
+     * @param string $targetPath
+     * @return bool
+     */
+    public function getSessionTargetPath($targetPath, $default = '/')
+    {
+        return $this->session->get($this->getSessionTargetPathKey(), $default);
     }
 
     /**
