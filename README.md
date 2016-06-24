@@ -252,7 +252,7 @@ class OtpController extends Controller
 In your login form, add a hidden input with the name `_target_path` and the value `{{ app.request.query.get('_target_path') }}` like so:
 
 ``` twig
-<input type="hidden" name="_target_path" value="{{ app.request.query.get('_target_path') }}" />
+<input type="hidden" name="_target_path" value="{{ app.session.get('_security.main.target_path') }}" />
 ```
 This will be used to redirect the user after login to the OTP validation route.
 
@@ -270,9 +270,9 @@ Public API of this bundle
 
 This bundle registers several services into service container. These services will help you customize SSO flow in the your application:
 
-- [sso_identity_provider.service_manager](https://github.com/korotovsky/SingleSignOnIdentityProviderBundle/blob/0.3.x/src/Krtv/Bundle/SingleSignOnIdentityProviderBundle/Manager/ServiceManager.php) – Manager to work with SP. By given SP-identifier it returns an instance of `\Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface`
-- [sso_identity_provider.otp_manager](https://github.com/korotovsky/SingleSignOnLibrary/blob/0.3.x/src/Krtv/SingleSignOn/Manager/OneTimePasswordManagerInterface.php) – Manager to work with OTP-tokens. Validation, invalidation and receiving.
-- [sso_identity_provider.uri_signer](https://github.com/symfony/symfony/blob/2.7/src/Symfony/Component/HttpKernel/UriSigner.php) – Service for signing URLs, if you need to redirect users to /sso/login yourself.
+- [sso_identity_provider.service_manager](/src/Krtv/Bundle/SingleSignOnIdentityProviderBundle/Manager/ServiceManager.php) – Manager to work with SP. By given SP-identifier it returns an instance of `\Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface`
+- [sso_identity_provider.otp_manager](https://github.com/korotovsky/SingleSignOnLibrary/blob/0.2.x/src/Krtv/SingleSignOn/Manager/OneTimePasswordManagerInterface.php) – Manager to work with OTP-tokens. Validation, invalidation and receiving.
+- [sso_identity_provider.uri_signer](https://github.com/symfony/symfony/blob/3.1/src/Symfony/Component/HttpKernel/UriSigner.php) – Service for signing URLs, if you need to redirect users to /sso/login yourself.
 
 That's it for Identity Provider.
 Now you can continue configure [ServiceProvider part](https://github.com/korotovsky/SingleSignOnServiceProviderBundle#single-sign-on-service-provider)
