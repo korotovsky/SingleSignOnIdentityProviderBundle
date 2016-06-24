@@ -229,20 +229,20 @@ class OtpController extends Controller
         /** @var \Krtv\SingleSignOn\Model\OneTimePasswordInterface */
         $otp = $otpManager->get($pass);
 
-        $response = ['data' => []];
-
-        if (!empty($otp) && $otpManager->isValid($otp)) {
-            $response = [
-                'data' => [
-                    'created_at' => $otp->getCreated()->format('r'),
-                    'hash' => $otp->getHash(),
-                    'password' => $otp->getPassword(),
-                    'is_used' => $otp->getUsed(),
-                ],
-            ];
-
-            $otpManager->invalidate($otp);
+        if (!($otp instanceof OneTimePassword) || $otp->getUsed() === true) {
+            throw new BadRequestHttpException('Invalid OTP password');
         }
+
+        $otpManager->invalidate($otp);
+
+        $response = [
+            'data' => [
+                'created_at' => $otp->getCreated()->format('r'),
+                'hash' => $otp->getHash(),
+                'password' => $otp->getPassword(),
+                'is_used' => $otp->getUsed(),
+            ],
+        ];
 
         return new JsonResponse($response);
     }
