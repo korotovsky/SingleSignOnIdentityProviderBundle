@@ -231,7 +231,7 @@ class OtpController extends Controller
 
         $response = ['data' => []];
 
-        if (!empty($otp)) {
+        if (!empty($otp) && $otpManager->isValid($otp)) {
             $response = [
                 'data' => [
                     'created_at' => $otp->getCreated()->format('r'),
@@ -240,6 +240,8 @@ class OtpController extends Controller
                     'is_used' => $otp->getUsed(),
                 ],
             ];
+
+            $otpManager->invalidate($otp);
         }
 
         return new JsonResponse($response);
