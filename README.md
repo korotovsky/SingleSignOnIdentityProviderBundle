@@ -7,9 +7,9 @@ Single Sign On Identity Provider
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/d68cc257-6cfc-4e66-9c51-28be57b347c4/mini.png?v=1)](https://insight.sensiolabs.com/projects/d68cc257-6cfc-4e66-9c51-28be57b347c4)
 
 Disclaimer
---------
-I am by no means a security expert. I'm not bad at it either, but I cannot vouch for the security of this bundle. 
-You can use this in production if you want, but please do so at your own risk. 
+----------
+I am by no means a security expert. I'm not bad at it either, but I cannot vouch for the security of this bundle.
+You can use this in production if you want, but please do so at your own risk.
 That said, if you'd like to contribute to make this bundle better/safer, you can always [create an issue](https://github.com/korotovsky/SingleSignOnIdentityProviderBundle/issues) or send [a pull request](https://github.com/korotovsky/SingleSignOnIdentityProviderBundle/pulls).
 
 Description
@@ -63,26 +63,197 @@ krtv_single_sign_on_identity_provider:
 
     otp_parameter:    _otp
     secret_parameter: secret
+```
 
+You must create the service providers.
+Each ServiceProvider must implement `Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface`.
+
+``` php
+<?php
+// src/AcmeBundle/ServiceProviders/Consumer1.php
+
+namespace AcmeBundle\ServiceProviders;
+
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface;
+
+/**
+ * Consumer 1 service provider
+ */
+class Consumer1 implements ServiceProviderInterface
+{
+    /**
+     * Get name of the service
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return 'consumer1';
+    }
+
+    /**
+     * Get service provider index url
+     *
+     * @param  array  $parameters
+     *
+     * @return string
+     */
+    public function getServiceIndexUrl($parameters = [])
+    {
+        return 'http://consumer1.com/';
+    }
+
+    /**
+     * Get service provider logout url
+     *
+     * @param  array  $parameters
+     *
+     * @return string
+     */
+    public function getServiceLogoutUrl($parameters = [])
+    {
+        return 'http://consumer1.com/logout';
+    }
+}
+```
+
+``` php
+<?php
+// src/AcmeBundle/ServiceProviders/Consumer2.php
+
+namespace AcmeBundle\ServiceProviders;
+
+use Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface;
+
+/**
+ * Consumer 2 service provider
+ */
+class Consumer2 implements ServiceProviderInterface
+{
+    /**
+     * Get name of the service
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return 'consumer2';
+    }
+
+    /**
+     * Get service provider index url
+     *
+     * @param  array  $parameters
+     *
+     * @return string
+     */
+    public function getServiceIndexUrl($parameters = [])
+    {
+        return 'http://consumer2.com/';
+    }
+
+    /**
+     * Get service provider logout url
+     *
+     * @param  array  $parameters
+     *
+     * @return string
+     */
+    public function getServiceLogoutUrl($parameters = [])
+    {
+        return 'http://consumer2.com/logout';
+    }
+}
+```
+
+And define them as services.
+
+``` yaml
+# app/config/services.yml
 services:
     acme_bundle.sso.consumer1:
-        class: Krtv\Bundle\SingleSignOnIdentityProviderBundle\Tests\Application\ServiceProviders\ServiceProvider1
+        class: AcmeBundle\ServiceProviders\Consumer1
         tags:
             - { name: sso.service_provider, service: consumer1 }
 
     acme_bundle.sso.consumer2:
-        class: Krtv\Bundle\SingleSignOnIdentityProviderBundle\Tests\Application\ServiceProviders\ServiceProvider2
+        class: AcmeBundle\ServiceProviders\Consumer2
         tags:
             - { name: sso.service_provider, service: consumer2 }
 ```
 
-Feel free to modify `ServiceProviders\*` classes. They contain your own specific logic for each connected service.
+We need to allow users to access the /sso/login route without being logged in
 
 ``` yaml
 # app/config/security.yml
 security:
     access_control:
-        - { path: ^/sso/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/sso/login, role: IS_AUTHENTICATED_ANONYMOUSLY }
 ```
 
-That's it for Identity Provider. Now you can continue configure [ServiceProvider part](https://github.com/korotovsky/SingleSignOnServiceProviderBundle#single-sign-on-service-provider)
+You need to create an OTP retrieving route that will be used by the SP bundle.
+The route doesn't really matter, but take note of it. It will be used in the SP bundle.
+
+``` php
+<?php
+// src/AcmeBundle/Controller/OtpController.php
+
+namespace AcmeBundle\Controller;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class OtpController extends Controller
+{
+    /**
+     * Method used for retrieving of the OTP
+     *
+     * @Route("/internal/v1/sso", name="sso_otp")
+     * @Method("GET")
+     *
+     * @param  Request $request
+     *
+     * @return JsonResponse
+     */
+    public function indexAction(Request $request)
+    {
+        /** @var \Krtv\SingleSignOn\Manager\OneTimePasswordManagerInterface */
+        $otpManager = $this->get('sso_identity_provider.otp_manager');
+
+        $pass = str_replace(' ', '+', $request->query->get('_otp'));
+
+        /** @var \Krtv\SingleSignOn\Model\OneTimePasswordInterface */
+        $otp = $otpManager->get($pass);
+
+        $response = ['data' => []];
+
+        if (!empty($otp)) {
+            $response = [
+                'data' => [
+                    'created_at' => $otp->getCreated()->format('r'),
+                    'hash' => $otp->getHash(),
+                    'password' => $otp->getPassword(),
+                    'is_used' => $otp->getUsed(),
+                ],
+            ];
+        }
+
+        return new JsonResponse($response);
+    }
+}
+```
+
+Public API of this bundle
+
+This bundle registers several services into service container. These services will help you customize SSO flow in the your application:
+
+[sso_identity_provider.service_manager](https://github.com/korotovsky/SingleSignOnIdentityProviderBundle/blob/0.3.x/src/Krtv/Bundle/SingleSignOnIdentityProviderBundle/Manager/ServiceManager.php) – Manager to work with SP. By given SP-identifier it returns an instance of \Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface
+[sso_identity_provider.otp_manager](https://github.com/korotovsky/SingleSignOnLibrary/blob/0.3.x/src/Krtv/SingleSignOn/Manager/OneTimePasswordManagerInterface.php) – Manager to work with OTP-tokens. Validation, invalidation and receiving.
+[sso_identity_provider.uri_signer](https://github.com/symfony/symfony/blob/2.7/src/Symfony/Component/HttpKernel/UriSigner.php) – Service for signing URLs, if you need to redirect users to /sso/login yourself.
+
+That's it for Identity Provider.
+Now you can continue configure [ServiceProvider part](https://github.com/korotovsky/SingleSignOnServiceProviderBundle#single-sign-on-service-provider)
