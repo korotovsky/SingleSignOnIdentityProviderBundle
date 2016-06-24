@@ -219,36 +219,6 @@ sso:
 ``` yaml
 # app/config/security.yml
 security:
-    firewalls:
-        main:
-            pattern: ^/
-            sso:
-                require_previous_session: false
-                provider:                 main
-                check_path:               /otp/validate/     # Same as in app/config/routing.yml
-
-                sso_scheme:               http               # Required
-                sso_host:                 idp.example.com    # Required
-
-                sso_otp_scheme:           http               # Optional
-                sso_otp_host:             consumer1.com      # Optional
-
-                sso_failure_path:         /login             # Can also be as an absolute path to service provider
-                sso_path:                 /sso/login/        # SSO endpoint on IdP.
-
-                sso_service_extra:           null            # Default service extra parameters. Optional.
-                sso_service_extra_parameter: service_extra   # Parameter name. Optional
-
-                sso_login_required:           1              # Optional
-                sso_login_required_parameter: login_required # Optional
-
-                sso_service:                  consumer1      # Consumer name
-
-            logout:
-                invalidate_session: true
-                path:               /logout
-                target:             http://idp.example.com/sso/logout?service=consumer1
-
     access_control:
         # We need to allow users to access the /sso/login route 
         # without being logged in
