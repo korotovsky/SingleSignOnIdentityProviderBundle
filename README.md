@@ -19,53 +19,48 @@ and redirects all configured SSO-routes to authenticate via a one-time-password.
 
 Installation
 ------------
-Install using composer:
+Installation is a quick 9 steps process:
 
-```
-php composer.phar require "korotovsky/sso-idp-bundle:~0.3.0"
+1. Download SingleSignOnIdentityProviderBundle using composer
+2. Enable the bundle
+3. Create service provider(s)
+4. Configure SingleSignOnIdentityProviderBundle
+5. Enable the route to validate OTP
+6. Modify security settings
+7. Create OTP route
+8. Add redirect path to login form
+9. Update database schema
+
+### Step 1: Download SingleSignOnIdentityProviderBundle using composer
+
+Tell composer to require the package:
+
+``` bash
+composer require korotovsky/sso-idp-bundle
 ```
 
-Enable the bundle in the kernel:
+Composer will install the bundle to your project's `vendor/korotovsky` directory.
+
+### Step 2: Enable the bundle
 
 ``` php
+<?php
 // app/AppKernel.php
-$bundles[] = new \Krtv\Bundle\SingleSignOnIdentityProviderBundle\KrtvSingleSignOnIdentityProviderBundle();
+
+public function registerBundles()
+{
+    $bundles = [
+        // ...
+        new Krtv\Bundle\SingleSignOnIdentityProviderBundle\KrtvSingleSignOnIdentityProviderBundle(),
+    ];
+}
+?>
 ```
 
-Configuration
--------------
+### Step 3: Create service provider(s)
 
-Enable sso-routes:
+You have to create a ServiceProvider for each application that uses the SSO SP bundle.
 
-``` yaml
-# app/config/routing.yml:
-sso:
-    resource: .
-    type:     sso
-```
-
-The bundle relies on an existing firewall to provide the actual authentication.
-To do this, you have to configure the single-sign-on login path to be behind that firewall,
-and make sure you need to be authenticated to access that route.
-
-``` yaml
-# app/config/config.yml:
-krtv_single_sign_on_identity_provider:
-    host:             idp.example.com
-    host_scheme:      http
-
-    login_path:       /sso/login/
-    logout_path:      /sso/logout
-
-    services:
-        - consumer1
-        - consumer2
-
-    otp_parameter:    _otp
-    secret_parameter: secret
-```
-
-You must create the service providers.
 Each ServiceProvider must implement `Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceProviderInterface`.
 
 ``` php
@@ -115,6 +110,7 @@ class Consumer1 implements ServiceProviderInterface
         return 'http://consumer1.com/logout';
     }
 }
+?>
 ```
 
 ``` php
@@ -164,6 +160,7 @@ class Consumer2 implements ServiceProviderInterface
         return 'http://consumer2.com/logout';
     }
 }
+?>
 ```
 
 And define them as services.
@@ -182,17 +179,89 @@ services:
             - { name: sso.service_provider, service: consumer2 }
 ```
 
-We need to allow users to access the /sso/login route without being logged in
+### Step 4: Configure SingleSignOnIdentityProviderBundle
+
+The bundle relies on an existing firewall to provide the actual authentication.
+To do this, you have to configure the single-sign-on login path to be behind that firewall,
+and make sure you need to be authenticated to access that route.
+
+Add the following settings to your **config.yml**.
+
+``` yaml
+# app/config/config.yml:
+krtv_single_sign_on_identity_provider:
+    host:             idp.example.com
+    host_scheme:      http
+
+    login_path:       /sso/login/
+    logout_path:      /sso/logout
+
+    services:
+        - consumer1
+        - consumer2
+
+    otp_parameter:    _otp
+    secret_parameter: secret
+```
+
+
+### Step 5: Enable route to validate OTP
+
+``` yaml
+# app/config/routing.yml
+sso:
+    resource: .
+    type:     sso
+```
+
+### Step 6: Modify security settings
 
 ``` yaml
 # app/config/security.yml
 security:
+    firewalls:
+        main:
+            pattern: ^/
+            sso:
+                require_previous_session: false
+                provider:                 main
+                check_path:               /otp/validate/     # Same as in app/config/routing.yml
+
+                sso_scheme:               http               # Required
+                sso_host:                 idp.example.com    # Required
+
+                sso_otp_scheme:           http               # Optional
+                sso_otp_host:             consumer1.com      # Optional
+
+                sso_failure_path:         /login             # Can also be as an absolute path to service provider
+                sso_path:                 /sso/login/        # SSO endpoint on IdP.
+
+                sso_service_extra:           null            # Default service extra parameters. Optional.
+                sso_service_extra_parameter: service_extra   # Parameter name. Optional
+
+                sso_login_required:           1              # Optional
+                sso_login_required_parameter: login_required # Optional
+
+                sso_service:                  consumer1      # Consumer name
+
+            logout:
+                invalidate_session: true
+                path:               /logout
+                target:             http://idp.example.com/sso/logout?service=consumer1
+
     access_control:
+        # We need to allow users to access the /sso/login route 
+        # without being logged in
         - { path: ^/sso/login, role: IS_AUTHENTICATED_ANONYMOUSLY }
 ```
 
-You need to create an OTP retrieving route that will be used by the SP bundle.
-The route doesn't really matter, but take note of it. It will be used in the SP bundle.
+### Step 7: Create OTP route
+
+In order to validate the OTP and authenticate the user, you must create a route that can retrieve the OTP details
+from the database and that can verify if it is valid.
+
+The route path doesn't really matter, but take note of it. It will be used in the SP bundle.
+In our example, the route is `/internal/v1/sso`.
 
 ``` php
 <?php
@@ -233,8 +302,6 @@ class OtpController extends Controller
             throw new BadRequestHttpException('Invalid OTP password');
         }
 
-        $otpManager->invalidate($otp);
-
         $response = [
             'data' => [
                 'created_at' => $otp->getCreated()->format('r'),
@@ -244,24 +311,30 @@ class OtpController extends Controller
             ],
         ];
 
+        $otpManager->invalidate($otp);
+
         return new JsonResponse($response);
     }
 }
+?>
 ```
 
-In your login form, add a hidden input with the name `_target_path` and the value `{{ app.session.get('_security.main.target_path') }}` like so:
+### Step 8: Add redirect path to login form
+
+In your login form, add a hidden input with the name `_target_path` and the value
+`{{ app.session.get('_security.main.target_path') }}` like so:
 
 ``` twig
 <input type="hidden" name="_target_path" value="{{ app.session.get('_security.main.target_path') }}" />
 ```
+
 This will be used to redirect the user after login to the OTP validation route.
 
-Doctrine
---------
+### Step 9: Update database schema
 
 To be able to store the OTPs, you must run the command:
 
-```
+``` bash
 php bin/console doctrine:schema:update --force
 ```
 
