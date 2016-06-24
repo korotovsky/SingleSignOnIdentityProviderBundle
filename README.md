@@ -254,6 +254,15 @@ In your login form, add a hidden input with the name `_target_path` and the valu
 ```
 This will be used to redirect the user after login to the OTP validation route.
 
+Doctrine
+--------
+
+To be able to store the OTPs, you must run the command:
+
+```
+php bin/console doctrine:schema:update --force
+```
+
 Public API of this bundle
 -------------------------
 
