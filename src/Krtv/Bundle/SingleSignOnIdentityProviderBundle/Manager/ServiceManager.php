@@ -158,10 +158,10 @@ class ServiceManager
     /**
      * Get target path from _security.ID.target_path.
      *
-     * @param string $targetPath
+     * @param string $default
      * @return bool
      */
-    public function getSessionTargetPath($targetPath, $default = '/')
+    public function getSessionTargetPath($default = '/')
     {
         return $this->session->get($this->getSessionTargetPathKey(), $default);
     }
