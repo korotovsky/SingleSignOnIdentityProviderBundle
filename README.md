@@ -249,7 +249,7 @@ class OtpController extends Controller
 }
 ```
 
-In your login form, add a hidden input with the name `_target_path` and the value `{{ app.request.query.get('_target_path') }}` like so:
+In your login form, add a hidden input with the name `_target_path` and the value `{{ app.session.get('_security.main.target_path') }}` like so:
 
 ``` twig
 <input type="hidden" name="_target_path" value="{{ app.session.get('_security.main.target_path') }}" />
