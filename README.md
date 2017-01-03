@@ -510,6 +510,7 @@ In our example, the route is `/internal/v1/sso`.
 
 namespace AcmeBundle\Controller;
 
+use Krtv\SingleSignOn\Model\OneTimePassword;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
