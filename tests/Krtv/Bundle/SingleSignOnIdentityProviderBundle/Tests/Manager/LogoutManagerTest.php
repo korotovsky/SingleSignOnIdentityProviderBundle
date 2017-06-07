@@ -125,7 +125,7 @@ class LogoutManagerTest extends \PHPUnit_Framework_TestCase
         $routerMock->expects($this->once())
             ->method('generate')
             ->willReturnMap(array(
-                array('_security_logout', array(), UrlGeneratorInterface::ABSOLUTE_PATH, 'http://idp.example.com/logout')
+                array('_security_logout', array(), UrlGeneratorInterface::ABSOLUTE_URL, 'http://idp.example.com/logout')
             ));
 
         $logoutManager = new LogoutManager($serviceManagerMock, $this->getSessionMock(), $routerMock);

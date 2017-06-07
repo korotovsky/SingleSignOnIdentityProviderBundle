@@ -71,7 +71,7 @@ class LogoutManager
             return $serviceManager->getServiceLogoutUrl();
         }
 
-        return $this->router->generate('_security_logout');
+        return $this->router->generate('_security_logout', array(), RouterInterface::ABSOLUTE_URL);
     }
 
     /**
