@@ -77,7 +77,14 @@ class HttpUtils
      */
     public function createWrappedTargetPath(Request $request, $otp)
     {
-        return sprintf('%s&%s=%s', $request->get($this->targetPathParameter), $this->otpParameter, rawurlencode($otp));
+        $targetPath = $request->get($this->targetPathParameter);
+
+        return sprintf(
+            (false === strpos($targetPath, '?')) ? '%s?%s=%s' : '%s&%s=%s',
+            $targetPath,
+            $this->otpParameter,
+            rawurlencode($otp)
+        );
     }
 
     /**

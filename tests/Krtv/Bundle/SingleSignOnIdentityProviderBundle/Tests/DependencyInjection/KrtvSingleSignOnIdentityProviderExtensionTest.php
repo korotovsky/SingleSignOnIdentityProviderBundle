@@ -3,7 +3,6 @@
 namespace Krtv\Bundle\SingleSignOnIdentityProviderBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
  * Class KrtvSingleSignOnIdentityProviderExtensionTest
@@ -17,6 +16,14 @@ class KrtvSingleSignOnIdentityProviderExtensionTest extends \PHPUnit_Framework_T
     public function testLoad()
     {
         $container = new ContainerBuilder();
+        // remove default aliases of 'service_container' : Psr\Container\ContainerInterface  & Symfony\Component\DependencyInjection\ContainerInterface
+        foreach ($container->getAliases() as $id => $alias) {
+            $container->removeAlias($id);
+        }
+        // default definition like of 'service_container'
+        foreach ($container->getDefinitions() as $id => $definition) {
+            $container->removeDefinition($id);
+        }
 
         $configs = array(
             array(

@@ -35,7 +35,7 @@ class ServiceProvidersPassTest extends \PHPUnit_Framework_TestCase
         $this->container->expects($this->any())
             ->method('findTaggedServiceIds')
             ->willReturnMap(array(
-                array('sso.service_provider', array(
+                array('sso.service_provider', false, array(
                     'acme_bundle.sso.consumer1' => array(
                         array(
                             'service' => 'consumer1'

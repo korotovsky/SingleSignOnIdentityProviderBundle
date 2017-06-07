@@ -79,9 +79,6 @@ class TargetPathSubscriberTest extends \PHPUnit_Framework_TestCase
             ->method('getSessionService')
             ->willReturn(null);
         $serviceManagerMock->expects($this->never())
-            ->method('setRequestService')
-            ->willReturn(null);
-        $serviceManagerMock->expects($this->never())
             ->method('setSessionService')
             ->willReturn(null);
 
