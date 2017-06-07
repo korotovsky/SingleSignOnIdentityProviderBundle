@@ -28,12 +28,11 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
     private $consumers = array();
 
     /**
-     *
+     * @expectedException RuntimeException
+     * @expectedExceptionMessage No ServiceProvider managers found. Make sure that you have at least one ServiceProvider manager tagged with "sso.service_provider"
      */
     public function testInvalidInvocation()
     {
-        $this->expectException('RuntimeException');
-        $this->expectExceptionMessage('No ServiceProvider managers found. Make sure that you have at least one ServiceProvider manager tagged with "sso.service_provider"');
         new ServiceManager(new RequestStack(), $this->getSessionMock(), 'main', array(), array(
             'service_parameter' => 'service',
             'service_extra_parameter' => 'service_extra',
@@ -80,13 +79,11 @@ class ServiceManagerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage Unknown service consumer2
      */
     public function testExceptionWhenGetServiceManager()
     {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Unknown service consumer2');
-
         $serviceManager = new ServiceManager(new RequestStack(), $this->getSessionMock(), 'main', array(
             'consumer1' => $consumer1 = $this->getConsumerMock('consumer1')
         ), array(
