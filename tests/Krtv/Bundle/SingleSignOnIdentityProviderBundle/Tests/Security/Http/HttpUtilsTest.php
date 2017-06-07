@@ -43,14 +43,27 @@ class HttpUtilsTest extends \PHPUnit_Framework_TestCase
     /**
      *
      */
-    public function testCreateWrappedTargetPath()
+    public function testCreateWrappedTargetPathWithoutQuestionMark()
     {
         $request = new Request(array('_target_path' => '/foo'));
         $httpUtils = $this->getHttpUtils();
 
         $wrappedTargetPath = $httpUtils->createWrappedTargetPath($request, 'xyz');
 
-        $this->assertEquals('/foo&_otp=xyz', $wrappedTargetPath);
+        $this->assertEquals('/foo?_otp=xyz', $wrappedTargetPath);
+    }
+
+    /**
+     *
+     */
+    public function testCreateWrappedTargetPathWithQuestionMark()
+    {
+        $request = new Request(array('_target_path' => '/foo?bar=foobar'));
+        $httpUtils = $this->getHttpUtils();
+
+        $wrappedTargetPath = $httpUtils->createWrappedTargetPath($request, 'xyz');
+
+        $this->assertEquals('/foo?bar=foobar&_otp=xyz', $wrappedTargetPath);
     }
 
     /**
