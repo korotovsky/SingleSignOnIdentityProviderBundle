@@ -52,22 +52,28 @@ class HttpUtils
      * @param Request $request
      * @param string  $path
      * @param int     $status
+     *
      * @return RedirectResponse
+     * @throws \LogicException
+     * @throws \InvalidArgumentException
      */
     public function createRedirectResponse(Request $request, $path, $status = 302)
     {
-        return $this->httpUtils->createRedirectResponse($request, $path, $status);
+        return new RedirectResponse($this->httpUtils->generateUri($request, $path), $status);
     }
 
     /**
      * @param Request $request
      * @param string  $path
      * @param int     $status
+     *
      * @return RedirectResponse
+     * @throws \LogicException
+     * @throws \InvalidArgumentException
      */
     public function createSignedRedirectResponse(Request $request, $path, $status = 302)
     {
-        return $this->httpUtils->createRedirectResponse($request, $this->uriSigner->sign($path), $status);
+        return new RedirectResponse($this->httpUtils->generateUri($request, $this->uriSigner->sign($path)), $status);
     }
 
     /**
