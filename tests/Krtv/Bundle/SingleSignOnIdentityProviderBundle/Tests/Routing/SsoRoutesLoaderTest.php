@@ -38,7 +38,7 @@ class KrtvSingleSignOnIdentityProviderBundleTest extends \PHPUnit_Framework_Test
             ->getMock();
 
         $this->getSsoRoutesLoader()->setResolver($resolverMock);
-        $this->getSsoRoutesLoader()->getResolver();
+        $this->assertNull($this->getSsoRoutesLoader()->getResolver());
     }
 
     /**
