@@ -53,10 +53,19 @@ class LogoutManager
 
         $availableServices = $this->serviceManager->getServices();
         $completedServices = $this->getCompletedServices();
-
+        
+        if (!empty($completedServices)){
+            $first = array_values($completedServices)[0];
+            $indexUrl = $this->serviceManager->getServiceManager($first)->getServiceIndexUrl();
+            $this->session->set('_security.main.target_path', $indexUrl);
+        }
+        
         $nextService = null;
         foreach ($availableServices as $service) {
-            if (in_array($service, $completedServices)) {
+            $serviceManager = $this->serviceManager->getServiceManager($service);
+            $indexUrl = $serviceManager->getServiceIndexUrl();
+        
+            if ( in_array($service, $completedServices) || !$this->isHostUp($indexUrl) ){
                 continue;
             }
 
@@ -99,5 +108,25 @@ class LogoutManager
     private function getSessionKey()
     {
         return static::SERVICE_SESSION_NS;
+    }
+    
+    
+    public function isHostUp($url) {
+        $handle = curl_init($url);
+        curl_setopt($handle,  CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($handle, CURLOPT_TIMEOUT, 5);
+        curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, 5);
+        
+        $response = curl_exec($handle);
+
+        /* Check for 404 (file not found). */
+        $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        
+        
+        curl_close($handle);
+        if($httpCode == 404 || $httpCode == 0) {
+            return false;
+        }
+        return true;
     }
 }
