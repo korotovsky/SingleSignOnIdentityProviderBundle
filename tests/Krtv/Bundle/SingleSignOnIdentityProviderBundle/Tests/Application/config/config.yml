@@ -19,11 +19,9 @@ framework:
         engines:
             - twig
 
-    trusted_proxies: ~
-
 security:
     access_decision_manager:
-            strategy: affirmative
+        strategy: affirmative
 
     providers:
         in_memory:
