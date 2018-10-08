@@ -8,19 +8,19 @@
     </parameters>
 
     <services>
-        <service id="krtv_single_sign_on_identity_provider.routing.loader" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\Routing\SsoRoutesLoader">
+        <service id="krtv_single_sign_on_identity_provider.routing.loader" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\Routing\SsoRoutesLoader" public="true">
             <tag name="routing.loader"/>
             <argument/> <!-- sso host -->
             <argument/> <!-- sso login path -->
             <argument/> <!-- sso logout path -->
         </service>
 
-        <service id="krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm" class="Krtv\SingleSignOn\Manager\ORM\OneTimePasswordManager">
+        <service id="krtv_single_sign_on_identity_provider.security.authentication.otp_manager.orm" class="Krtv\SingleSignOn\Manager\ORM\OneTimePasswordManager" public="true">
             <argument type="service" id="doctrine.orm.entity_manager"/>
             <argument type="string">Krtv\Bundle\SingleSignOnIdentityProviderBundle\Entity\OneTimePassword</argument>
         </service>
 
-        <service id="krtv_single_sign_on_identity_provider.manager.service_manager" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager">
+        <service id="krtv_single_sign_on_identity_provider.manager.service_manager" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\ServiceManager" public="true">
             <argument type="service" id="request_stack" />
             <argument type="service" id="session" />
             <argument type="string">%krtv_single_sign_on_identity_provider.security.firewall_id%</argument> <!-- main firewall id -->
@@ -28,27 +28,27 @@
             <argument type="collection" /> <!-- options -->
         </service>
 
-        <service id="krtv_single_sign_on_identity_provider.manager.logout_manager" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\LogoutManager">
+        <service id="krtv_single_sign_on_identity_provider.manager.logout_manager" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\Manager\LogoutManager" public="true">
             <argument type="service" id="krtv_single_sign_on_identity_provider.manager.service_manager" />
             <argument type="service" id="session" />
             <argument type="service" id="router" />
         </service>
 
-        <service id="krtv_single_sign_on_identity_provider.event_listener.service_subscriber" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\EventListener\TargetPathSubscriber">
+        <service id="krtv_single_sign_on_identity_provider.event_listener.service_subscriber" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\EventListener\TargetPathSubscriber" public="true">
             <argument type="service" id="krtv_single_sign_on_identity_provider.manager.service_manager" />
             <argument type="service" id="krtv_single_sign_on_identity_provider.uri_signer" />
             <tag name="kernel.event_subscriber" />
         </service>
 
-        <service id="krtv_single_sign_on_identity_provider.security.authentication.encoder" class="Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder">
+        <service id="krtv_single_sign_on_identity_provider.security.authentication.encoder" class="Krtv\SingleSignOn\Encoder\OneTimePasswordEncoder" public="true">
             <argument/> <!-- secret -->
         </service>
 
-        <service id="krtv_single_sign_on_identity_provider.uri_signer" class="Symfony\Component\HttpKernel\UriSigner">
+        <service id="krtv_single_sign_on_identity_provider.uri_signer" class="Symfony\Component\HttpKernel\UriSigner" public="true">
             <argument/> <!-- secret -->
         </service>
 
-        <service id="krtv_single_sign_on_identity_provider.security.http_utils" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\Security\Http\HttpUtils">
+        <service id="krtv_single_sign_on_identity_provider.security.http_utils" class="Krtv\Bundle\SingleSignOnIdentityProviderBundle\Security\Http\HttpUtils" public="true">
             <argument type="service" id="krtv_single_sign_on_identity_provider.uri_signer"/>
             <argument type="service" id="security.http_utils"/>
             <argument type="string">%krtv_single_sign_on_identity_provider.otp_parameter%</argument>

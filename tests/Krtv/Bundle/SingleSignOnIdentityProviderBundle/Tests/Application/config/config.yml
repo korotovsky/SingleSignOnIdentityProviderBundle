@@ -7,9 +7,9 @@ framework:
     profiler:
         collect: false
 
-    secret: %secret%
+    secret: '%secret%'
     router:
-        resource: %kernel.root_dir%/config/routing.yml
+        resource: '%kernel.root_dir%/config/routing.yml'
         strict_requirements: ~
 
     form: ~
@@ -19,12 +19,9 @@ framework:
         engines:
             - twig
 
-    trusted_proxies: ~
-    session: ~
-
 security:
     access_decision_manager:
-            strategy: affirmative
+        strategy: affirmative
 
     providers:
         in_memory:
@@ -50,7 +47,7 @@ security:
                 path: /logout
 
     access_control:
-        - { host: %host%, path: ^/sso/login/$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { host: '%host%', path: ^/sso/login/$, role: IS_AUTHENTICATED_ANONYMOUSLY }
 
 doctrine:
     dbal:
@@ -62,13 +59,13 @@ doctrine:
         auto_mapping: true
 
 krtv_single_sign_on_identity_provider:
-    host:             %host%
-    host_scheme:      %host.scheme%
+    host:             '%host%'
+    host_scheme:      '%host.scheme%'
 
     login_path:       /sso/login/
     logout_path:      /sso/logout
 
-    services:         %sso_active_services%
+    services:         '%sso_active_services%'
 
     otp_parameter:    _otp
     secret_parameter: secret
@@ -94,6 +91,6 @@ parameters:
         - consumer1
         - consumer2
 
-    router.request_context.host:      %host%
-    router.request_context.scheme:    %host.scheme%
-    router.request_context.base_url:  ~
+    router.request_context.host:      '%host%'
+    router.request_context.scheme:    '%host.scheme%'
+    router.request_context.base_url:  '/'
