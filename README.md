@@ -1,3 +1,89 @@
+Single Sign On Identity Provider - Extension
+================================
+Below is forked readme from korotovsky, here will be explained what this extension provides:
+- There is always a situation when SP1 is most important project and other ones SP2, SP3 are not so much important, in original implementation if we log out from SP1 we in SSO loop trigger log out from SP2 and the rest of SP's, but if SP2 has some critical error it will return response code 404, or if host is unknown response code 0, so sso/logout will break and we cant log out from SP1. These situations are now handled in LogoutManager so logout is not triggered on SPs that return response codes 404 or 0 and logout on IDP and rest ISPs will be successful.
+- Branch **0.3.X** of IDP is not filling properly **_security.main.target_path** as **0.2.X** does. On **0.3.X** this information stays in url as **_target_path** parameter so its retrieved from there. Look example of login route below.
+- On IDP is registration, that registration link can lead to IDP registration page that is common for all SPs, but in situations where we want registration page of SP from which user came to IDP we must extend Service provider for registration url getter and then extract proper registration page of SP in IDP login route. Look example below.
+
+``` bash
+/**
+* @Route("/login", name="login")
+*/
+public function loginAction(Request $request) {
+
+   $serviceManager = $this->get('krtv_single_sign_on_identity_provider.manager.service_manager');
+
+   // populating propper target path
+   $target_path = $request->getSession()->get('_security.main.target_path');
+   if ($request->query->get('_target_path')){
+       $target_path = $request->query->get('_target_path');
+   }
+   $request->getSession()->set('_security.main.target_path', $target_path);
+
+   if ($this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+       return $this->redirect($target_path);
+   }
+
+   //getting register url
+   $service = substr($target_path, strpos($target_path, 'service=') + 8);
+   $availableServices = $serviceManager->getServices();
+   if (!in_array($service, $availableServices)){
+       $service = 'YOUR_DEFAULT_SP';
+   }
+   $serviceProvider = $serviceManager->getServiceManager($service);
+   $register_url = $serviceProvider->getServiceRegisterUrl($service);
+
+   // getting errors if any
+   $authenticationUtils = $this->get('security.authentication_utils');
+   $error = $authenticationUtils->getLastAuthenticationError();
+   $lastUsername = $authenticationUtils->getLastUsername();
+
+   return $this->render("security/login.html.twig", array(
+       'register_url' => $register_url,
+       'error' => $error,
+       'lastUsername' => $lastUsername,
+       'target_path' => $target_path
+   ));
+}
+```
+
+- With original SSO implementation there was a problem when we are authenticated on IDP and SP1, but not on SP2. So when we visit SP2 public route SSO authentication is not triggered and user sees the public page of SP2 as not logged in user. For user to be logged in on all SPs javascript file authenticate.js should be present on IDP which SPs will include. And appropriate CORS settings set on http server.
+
+``` bash
+var hosts = ['http:/SP1.com','http://SP2.com','http://SP3.com','http://SP4.com'];
+
+for (var i=0; i < hosts.length; i++){
+    $.ajax({
+        'url': hosts[i] + '/sso/authenticate-user',
+        'type':'get',
+         xhrFields: { withCredentials: true },
+         success: function (data, textStatus, jqXHR) {
+             console.log('succes ' + hosts[i]);
+         },
+         error: function (jqXHR, textStatus, errorThrown) {
+             console.log('errror');
+         }
+    });
+}
+
+var url = window.location.href;
+url = url.replace('authAll=true', '');
+if (url.slice(-1) == '?'){
+    url = url.replace('?', '');
+}
+
+history.pushState({}, null, url);
+
+```
+
+### Note
+PHP session names on IDP and all SPs should be different and set in config.yml with ie:
+``` bash
+framework
+	session:
+        name: SP1SESSID
+```
+
 Single Sign On Identity Provider
 ================================
 
