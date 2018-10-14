@@ -72,8 +72,16 @@ if (url.slice(-1) == '?'){
     url = url.replace('?', '');
 }
 
-history.pushState({}, null, 'url');
+history.pushState({}, null, url);
 
+```
+
+### Note
+PHP session names on IDP and all SPs should be different and set in config.yml with ie:
+``` bash
+framework
+	session:
+        name: SP1SESSID
 ```
 
 Single Sign On Identity Provider
